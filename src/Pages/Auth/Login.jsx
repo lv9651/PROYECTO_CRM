@@ -10,13 +10,18 @@ import {
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useNavigate } from 'react-router-dom';
-import { BASE_URL } from "../../config";
+import { BASE_URL } from '../../Conf/config'; 
+import { useAuth } from '../../Compo/AuthContext';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
+
+  // ✅ Referencia a la imagen desde public
+  const loginImage = process.env.PUBLIC_URL + '/images/logo_login.jpeg';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,15 +50,15 @@ const Login = ({ onLogin }) => {
 
       const data = await response.json();
 
-      // Guardar token y userName en localStorage
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userName', data.userName);
+      // Guardar usuario en contexto
+      login({
+        token: data.token,
+        username: data.userName,
+        perfilCodigo: data.perfilCodigo,
+        emp_codigo: data.emp_codigo,
+        nombre: data.nombre
+      });
 
-      // Llamar a la función de login global
-      onLogin(true);
-
-      // Redirigir al dashboard
-      navigate('/dashboard');
     } catch (err) {
       setError(err.message || 'Error al iniciar sesión');
     }
@@ -62,25 +67,17 @@ const Login = ({ onLogin }) => {
   return (
     <>
       <CssBaseline />
-      <Box
-        sx={{
-          display: 'flex',
-          height: '100vh',
-          width: '100vw',
-        }}
-      >
-        {/* Imagen lateral */}
+      <Box sx={{ display: 'flex', height: '100vh', width: '100vw' }}>
         <Box
           sx={{
             flex: 7,
-            backgroundImage: 'url(http://apicrmpanda.qf.com.pe/images/logo_login.jpeg)',
+            backgroundImage: `url(${loginImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: { xs: 'none', md: 'block' },
           }}
         />
 
-        {/* Formulario de login */}
         <Box
           sx={{
             display: 'flex',
@@ -116,7 +113,6 @@ const Login = ({ onLogin }) => {
               required
               sx={{ mb: 2 }}
             />
-
             <TextField
               fullWidth
               label="Contraseña"
@@ -127,13 +123,7 @@ const Login = ({ onLogin }) => {
               required
               sx={{ mb: 3 }}
             />
-
-            <Button
-              fullWidth
-              variant="contained"
-              type="submit"
-              size="large"
-            >
+            <Button fullWidth variant="contained" type="submit" size="large">
               Ingresar
             </Button>
           </form>

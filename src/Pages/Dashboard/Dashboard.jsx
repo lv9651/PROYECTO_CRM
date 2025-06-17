@@ -1,211 +1,196 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Grid, 
-  Card, 
-  CardContent, 
-  Typography, 
-  Box,
-  Button,
-  Divider,
-  Container
+  Grid, Card, CardContent, Typography, 
+  Box, Button, Divider, Container, CircularProgress
 } from '@mui/material';
 import { 
-  People, 
-  MonetizationOn, 
-  Event, 
-  TrendingUp,
-  Business,
-  Assignment,
-  CalendarToday,
-  MeetingRoom,
-  Person,Addchart
+  People, MonetizationOn, Event, TrendingUp,
+  Business, Assignment, CalendarToday,AttachMoney,
+  MeetingRoom, Person, InsertChartOutlined as ChartIcon ,
+  HandshakeRounded
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useAuth } from '../../Compo/AuthContext';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
+  // Redirigir si no está autenticado
+  React.useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  // Datos para gráficos
   const clientData = [
     { name: 'Ene', clientes: 15 },
     { name: 'Feb', clientes: 22 },
-    { name: 'Mar', clientes: 18 },
-    { name: 'Abr', clientes: 25 },
-    { name: 'May', clientes: 30 },
-    { name: 'Jun', clientes: 28 },
-    { name: 'Jul', clientes: 20 },
+    // ... otros datos
   ];
 
+  // Estadísticas
   const stats = [
-    { title: 'Clientes', value: '124', icon: <People fontSize="medium" />, color: '#9c27b0' },
-    { title: 'Oportunidades', value: '42', icon: <MonetizationOn fontSize="medium" />, color: '#2e7d32' },
-    { title: 'Actividades', value: '18', icon: <Event fontSize="medium" />, color: '#ed6c02' },
-    { title: 'Ventas', value: '$56,200', icon: <TrendingUp fontSize="medium" />, color: '#15afc6' },
+    { title: 'Clientes', value: '124', icon: <People />, color: '#9c27b0' },
+    // ... otras estadísticas
   ];
 
-  const modules = [
-    { title: 'Cuentas', icon: <Business fontSize="large" />, color: '#15afc6', path: '/cuentas' },
-    { title: 'Oportunidades', icon: <Assignment fontSize="large" />, color: '#2e7d32', path: '/Oportunidades' },
-    { title: 'Calendario', icon: <CalendarToday fontSize="large" />, color: '#d32f2f', path: '/calendario' },
-    { title: 'Reuniones', icon: <MeetingRoom fontSize="large" />, color: '#ed6c02', path: '/reuniones' },
-    { title: 'Clientes', icon: <Person fontSize="large" />, color: '#9c27b0', path: '/clientes' },
-    { title: 'BI', icon: <Addchart fontSize="large" />, color: '#799e2e', path: '/BI' },
+  // Todos los módulos disponibles con sus permisos
+  const allModules = [
+    { 
+      title: 'Cuentas', 
+      icon: <Business fontSize="large" />, 
+      color: '#15afc6', 
+      path: '/cuentas',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin y gerente
+    },
+    { 
+      title: 'Oportunidades', 
+      icon: <Assignment fontSize="large" />, 
+      color: '#2e7d32', 
+      path: '/oportunidades',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin y asesor
+    },
+    { 
+      title: 'Calendario', 
+      icon: <CalendarToday fontSize="large" />, 
+      color: '#d32f2f', 
+      path: '/calendario',
+      allowedProfiles: ['ADMINISTRADOR'] // Todos
+    },
+    { 
+      title: 'Reuniones', 
+      icon: <MeetingRoom fontSize="large" />, 
+      color: '#ed6c02', 
+      path: '/reuniones',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin y gerente
+    },
+    { 
+      title: 'Clientes', 
+      icon: <Person fontSize="large" />, 
+      color: '#9c27b0', 
+      path: '/clientes',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin
+    },
+     { 
+      title: 'CONVENIO', 
+      icon: <HandshakeRounded fontSize="large" />, 
+      color: '#ff33ff', 
+      path: '/Convenio',
+      allowedProfiles: ['ADMINISTRADOR','REP.MEDICO'] // Solo admin
+    },
+
+     { 
+      title: 'CONVENIO', 
+      icon: <HandshakeRounded fontSize="large" />, 
+      color: '#ff33ff', 
+      path: '/RegistroRH',
+      allowedProfiles: ['CONTABILIDAD'] // Solo admin
+    },
+    { 
+      title: 'BI', 
+      icon: <ChartIcon fontSize="large" />, 
+      color: '#799e2e', 
+      path: '/bi',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin
+    }
+    ,
+    { 
+      title: 'CUOTA', 
+      icon: <AttachMoney fontSize="large" />, 
+      color: '#799e2e', 
+      path: '/Cuota',
+      allowedProfiles: ['ADMINISTRADOR','REP.MEDICO'] // Solo admin
+    }
   ];
+
+  // Función para determinar si un módulo debe mostrarse
+  const shouldShowModule = (module) => {
+    // ADMINISTRADOR ve todo
+    if (user?.perfilCodigo === 'ADMINISTRADOR') return true;
+    // Otros perfiles solo ven los módulos permitidos
+    return module.allowedProfiles.includes(user?.perfilCodigo);
+  };
+
+  if (!user) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
   return (
-    <Container maxWidth="xl" sx={{ 
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      py: 3
-    }}>
-      {/* Bienvenida */}
-      <Box sx={{ 
-        textAlign: 'center',
-        mb: 4,
-        width: '100%'
-      }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          ¡Bienvenido al CRM QF!
-        </Typography>
-        <Typography variant="subtitle1" color="text.secondary">
-          Panel de control y resumen de actividades
+    <Container maxWidth="xl">
+      <Box textAlign="center" my={4}>
+        <Typography variant="h4">
+          Bienvenido, {user.username} ({user.nombre})
         </Typography>
       </Box>
-
-      {/* Resumen General Compacto */}
-      <Box sx={{ 
-        width: '100%',
-        maxWidth: '900px',
-        mb: 4,
-        textAlign: 'center'
-      }}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Resumen General
-        </Typography>
-        
-        <Grid container spacing={2} justifyContent="center">
-          {stats.map((stat, index) => (
-            <Grid item xs={6} sm={3} key={index}>
-              <Card sx={{ 
-                height: '100%',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                textAlign: 'center',
-                p: 2,
-                boxShadow: 1
-              }}>
-                <Box sx={{ 
-                  color: stat.color,
-                  fontSize: '2rem',
-                  mb: 1
-                }}>
-                  {stat.icon}
-                </Box>
-                <Typography variant="h5" component="div">
-                  {stat.value}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {stat.title}
-                </Typography>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      <Divider sx={{ my: 3, width: '80%' }} />
 
       {/* Módulos */}
-      <Box sx={{ 
-        width: '100%',
-        maxWidth: '1200px',
-        mb: 4,
-        textAlign: 'center'
-      }}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Acciones rápidas
-        </Typography>
-        
-        <Grid container spacing={2} justifyContent="center">
-          {modules.map((module, index) => (
-            <Grid item xs={6} sm={4} md={2.4} key={index}>
-              <Button 
-                onClick={() => navigate(module.path)}
-                fullWidth
-                sx={{ 
-                  height: '140px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  p: 2,
-                  borderRadius: 2,
-                  boxShadow: 2,
-                  '&:hover': {
-                    boxShadow: 4
-                  }
-                }}
-              >
-                <Box sx={{ 
-                  color: module.color,
-                  fontSize: '2.5rem',
-                  mb: 1
-                }}>
-                  {module.icon}
-                </Box>
-                <Typography variant="subtitle1">
-                  {module.title}
-                </Typography>
-              </Button>
-            </Grid>
-          ))}
-        </Grid>
-      </Box>
-
-      <Divider sx={{ my: 3, width: '80%' }} />
-
-      {/* Gráfico */}
-      <Box sx={{ 
-        width: '100%',
-        maxWidth: '1000px',
-        textAlign: 'center'
-      }}>
-        <Typography variant="h5" component="h2" gutterBottom>
-          Estadísticas
-        </Typography>
-        
-        <Card sx={{ 
-          p: 2,
-          borderRadius: 2,
-          boxShadow: 1
-        }}>
-          <Typography variant="h6" gutterBottom>
-            Clientes por mes
+    {/* Módulos */}
+<Box sx={{ mb: 6 }}>
+  <Typography variant="h5" gutterBottom align="center">
+    Módulos disponibles
+  </Typography>
+  <Grid container spacing={3} justifyContent="center">
+    {allModules.filter(shouldShowModule).map((module, index) => (
+      <Grid item xs={12} sm={6} md={4} lg={3} key={index}>
+        <Button
+          onClick={() => navigate(module.path)}
+          sx={{
+            width: '100%',
+            height: '160px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            borderRadius: 3,
+            boxShadow: 3,
+            backgroundColor: 'background.paper',
+            p: 3,
+            '&:hover': {
+              boxShadow: 6,
+              transform: 'scale(1.02)',
+              transition: 'transform 0.2s ease-in-out'
+            }
+          }}
+        >
+          <Box sx={{ color: module.color, fontSize: 50, mb: 1 }}>
+            {module.icon}
+          </Box>
+          <Typography variant="subtitle1" fontWeight="bold">
+            {module.title}
           </Typography>
-          
-          <Box sx={{ 
-            height: '300px',
-            width: '100%'
-          }}>
-            <ResponsiveContainer width="100%" height="100%">
+        </Button>
+      </Grid>
+    ))}
+  </Grid>
+</Box>
+      {/* Estadísticas (solo para ADMINISTRADOR) */}
+      {user?.perfilCodigo === 'ADMINISTRADOR' && (
+        <Box sx={{ mt: 4 }}>
+          <Typography variant="h5" gutterBottom>
+            Estadísticas
+          </Typography>
+          <Card sx={{ p: 2, borderRadius: 2, boxShadow: 1 }}>
+            <ResponsiveContainer width="100%" height={300}>
               <BarChart data={clientData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar 
-                  dataKey="clientes" 
-                  fill="#15afc6" 
-                  radius={[4, 4, 0, 0]}
-                />
+                <Bar dataKey="clientes" fill="#15afc6" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-          </Box>
-        </Card>
-      </Box>
+          </Card>
+        </Box>
+      )}
     </Container>
   );
 };
