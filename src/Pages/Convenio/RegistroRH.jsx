@@ -1,36 +1,86 @@
 import React, { useState } from 'react';
 import {
-  Container, Typography, Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, Modal, Box, TextField, MenuItem, Checkbox, FormControlLabel, CircularProgress, Alert,
-  TablePagination
+  Container,
+  Typography,
+  Box,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  CircularProgress,
+  Alert,
+  Table,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  Modal,
+  TextField,
+  Checkbox,
+  FormControlLabel,
+  Divider,
+  Grid,
+  IconButton,Collapse 
 } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { BASE_URL } from '../../Conf/config';
-import { useAuth } from '../../Compo/AuthContext';
 
+const meses = [
+  { nombre: 'Enero', valor: 1 },
+  { nombre: 'Febrero', valor: 2 },
+  { nombre: 'Marzo', valor: 3 },
+  { nombre: 'Abril', valor: 4 },
+  { nombre: 'Mayo', valor: 5 },
+  { nombre: 'Junio', valor: 6 },
+  { nombre: 'Julio', valor: 7 },
+  { nombre: 'Agosto', valor: 8 },
+  { nombre: 'Septiembre', valor: 9 },
+  { nombre: 'Octubre', valor: 10 },
+  { nombre: 'Noviembre', valor: 11 },
+  { nombre: 'Diciembre', valor: 12 }
+];
+
+const anios = [2022, 2023, 2024, 2025];
 const empresas = ['QF', 'MS', 'VINALI'];
 const tiposDocumento = ['RH', 'FT'];
 
-const RegistroRH = () => {
-  const { user } = useAuth();
-
-  const [fechaInicio, setFechaInicio] = useState('');
-  const [fechaFin, setFechaFin] = useState('');
-  const [registros, setRegistros] = useState([]);
-  const [filtros, setFiltros] = useState({});
+const ConsultaPorMes = () => {
+  const [anio, setAnio] = useState('');
+  const [mes, setMes] = useState('');
+  const [datos, setDatos] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [pagina, setPagina] = useState(0);
-  const [filasPorPagina, setFilasPorPagina] = useState(5);
-
+  const [detallesVisibles, setDetallesVisibles] = useState({});
+  const toggleDetalle = (id) => {
+    setDetallesVisibles(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+ const [filtroZona, setFiltroZona] = useState('');
+  const [filtroRepresentante, setFiltroRepresentante] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [registroActual, setRegistroActual] = useState(null);
+
+  const formatearFechaInput = (fecha) => {
+    if (!fecha) return '';
+    const d = new Date(fecha);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const [formulario, setFormulario] = useState({
     fechaEmision: '',
     empresa: '',
     verificacion: false,
     tipoDocumento: '',
+    serie: '',
+    nrodocumento: '',
     importe: '',
+    detraccion: '',
     renta: '',
     totalPagar: '',
     ruc: '',
@@ -38,328 +88,543 @@ const RegistroRH = () => {
     observaciones: ''
   });
 
-  const cargarDatos = () => {
-    if (!fechaInicio || !fechaFin) {
-      setError('Debe ingresar ambas fechas');
+  const handleBuscar = () => {
+    if (!anio || !mes) {
+      setError('Debe seleccionar año y mes');
       return;
     }
 
-    setLoading(true);
     setError('');
+    setLoading(true);
 
-    axios.get(`${BASE_URL}/api/Convenio`, {
+    axios.get(`${BASE_URL}/api/Contabilidad_Convenio`, {
       params: {
-        fechaInicio,
-        fechaFin,
-        idRepresentante: '1'
+        anio,
+        mes
       }
     })
       .then(res => {
-        setRegistros(res.data);
+        setDatos(res.data);
         setLoading(false);
       })
       .catch(err => {
-        console.error('Error al cargar convenios:', err);
-        setError('Error al cargar los registros.');
+        console.error(err);
+        setError('Error al consultar los datos');
         setLoading(false);
       });
   };
 
-  const handleFiltroChange = (campo, valor) => {
-    setFiltros(prev => ({ ...prev, [campo]: valor }));
-    setPagina(0);
-  };
-
-  const filtrarRegistros = () => {
-    return registros.filter(reg => {
-      return Object.keys(filtros).every(key =>
-        (reg[key] || '').toString().toLowerCase().includes(filtros[key]?.toLowerCase() || '')
-      );
-    });
-  };
-
   const abrirModal = (registro) => {
     setRegistroActual(registro);
+        const importe = parseFloat(registro.importe) || 0;
+    const detraccion = parseFloat(registro.detraccion) || 0;
+    const renta = parseFloat(registro.renta) || 0;
+    const totalPagar = (importe - detraccion - renta).toFixed(2);
+  
     setFormulario({
-      fechaEmision: '',
-      empresa: '',
-      verificacion: false,
-      tipoDocumento: '',
-      importe: '',
-      renta: '',
-      totalPagar: '',
-      ruc: '',
-      descripcion: '',
-      observaciones: ''
+      fechaEmision: formatearFechaInput(registro.fechaEmision),
+      empresa: registro.empresa || '',
+      verificacion: registro.verificacion || false,
+      tipoDocumento: registro.tipoDocumento || '',
+      serie: registro.serie || '',
+      nrodocumento: registro.nrodocumento || '',
+      importe: registro.importe || '',
+      detraccion: registro.detraccion || '',
+      renta: registro.renta || '',
+      totalPagar: registro.totalPagar || '',
+      ruc: registro.ruc || '',
+      descripcion: registro.descripcion || '',
+      observaciones: registro.observaciones || ''
     });
+  
     setModalAbierto(true);
   };
 
-  const cerrarModal = () => setModalAbierto(false);
+  const cerrarModal = () => {
+    setModalAbierto(false);
+    setRegistroActual(null);
+  };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormulario(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
-  };
+    const val = type === 'checkbox' ? checked : value;
 
+    const tempForm = {
+      ...formulario,
+      [name]: val
+    };
+
+    const importe = parseFloat(name === 'importe' ? val : tempForm.importe) || 0;
+    const detraccion = parseFloat(name === 'detraccion' ? val : tempForm.detraccion) || 0;
+    const renta = parseFloat(name === 'renta' ? val : tempForm.renta) || 0;
+    const totalPagar = (importe - detraccion - renta).toFixed(2);
+
+    setFormulario({
+      ...tempForm,
+      totalPagar
+    });
+  };
   const handleGuardar = () => {
-    console.log('📦 Datos guardados para:', registroActual);
-    console.log(formulario);
-    cerrarModal();
+    if (!registroActual || !registroActual.id) {
+      alert('Registro no válido para actualizar');
+      return;
+    }
+  
+    const payload = {
+      Id: registroActual.id,
+      FechaEmision: formulario.fechaEmision,
+      Empresa: formulario.empresa,
+      Verificacion: formulario.verificacion,
+      TipoDocumento: formulario.tipoDocumento,
+      serie: formulario.serie || '',
+       nrodocumento: formulario.nrodocumento || '',
+      Importe: parseFloat(formulario.importe) || 0,
+      Detraccion: parseFloat(formulario.detraccion) || 0,
+      Renta: parseFloat(formulario.renta) || 0,
+      TotalPagar: parseFloat(formulario.totalPagar) || 0,
+      Ruc: formulario.ruc,
+      Descripcion: formulario.descripcion,
+      Observaciones: formulario.observaciones
+    };
+  
+    axios.put(`${BASE_URL}/api/Contabilidad_Convenio/${registroActual.id}`, payload)
+      .then(() => {
+        alert('Registro actualizado correctamente');
+        cerrarModal();
+        handleBuscar(); // <-- Aquí recargas los datos
+      })
+      .catch((error) => {
+        console.error('Error al actualizar:', error.response || error);
+        alert('Error al actualizar el registro');
+      });
   };
 
-  const handleChangePagina = (event, newPage) => {
-    setPagina(newPage);
-  };
-
-  const handleChangeFilasPorPagina = (event) => {
-    setFilasPorPagina(parseInt(event.target.value, 10));
-    setPagina(0);
-  };
-
-  const registrosFiltrados = filtrarRegistros();
-  const registrosPaginados = registrosFiltrados.slice(pagina * filasPorPagina, pagina * filasPorPagina + filasPorPagina);
-
+ const datosFiltrados = datos.filter(item =>
+  (item.zona?.toLowerCase() || '').includes(filtroZona.toLowerCase()) &&
+  (item.representante_Medico?.toLowerCase() || '').includes(filtroRepresentante.toLowerCase())
+);
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom>Gestión de RXH</Typography>
+      <Typography variant="h4" gutterBottom>
+        Consulta de Convenios por Mes
+      </Typography>
 
       <Box display="flex" gap={2} mb={3}>
-        <TextField
-          type="date"
-          label="Fecha Inicio"
-          value={fechaInicio}
-          onChange={e => setFechaInicio(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-        />
-        <TextField
-          type="date"
-          label="Fecha Fin"
-          value={fechaFin}
-          onChange={e => setFechaFin(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
-        />
-        <Button variant="contained" onClick={cargarDatos}>Buscar</Button>
+        <FormControl fullWidth>
+          <InputLabel>Año</InputLabel>
+          <Select value={anio} onChange={(e) => setAnio(e.target.value)} label="Año">
+            {anios.map((a) => (
+              <MenuItem key={a} value={a}>{a}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <FormControl fullWidth>
+          <InputLabel>Mes</InputLabel>
+          <Select value={mes} onChange={(e) => setMes(e.target.value)} label="Mes">
+            {meses.map((m) => (
+              <MenuItem key={m.valor} value={m.valor}>{m.nombre}</MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+
+        <Button variant="contained" onClick={handleBuscar}>Buscar</Button>
       </Box>
 
-      {error && <Alert severity="warning">{error}</Alert>}
-      {loading && <Box textAlign="center"><CircularProgress /></Box>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+      {loading && <CircularProgress />}
 
-      {!loading && registros.length > 0 && (
+      {!loading && datos.length > 0 && (
         <TableContainer component={Paper}>
           <Table>
             <TableHead>
               <TableRow>
-                {[
-                  { key: 'zona', label: 'Zona' },
-                  { key: 'representante_Medico', label: 'Representate Medico' },
-                  { key: 'medico', label: 'Médico' },
-                  { key: 'documento', label: 'Documento' },
-                  { key: 'descripcion', label: 'Banco' },
-                  { key: 'cuenta', label: 'Cuenta' },
-                  { key: 'cci', label: 'CCI' },
-                  { key: 'unidaD_FM', label: 'UNIDAD FM' },
-                  { key: 'venta', label: 'Venta (S/)' },
-                ].map(({ key, label }) => (
-                  <TableCell key={key} sx={{ minWidth: 120 }}>
-                    <TextField
-                      variant="standard"
-                      placeholder={label}
-                      value={filtros[key] || ''}
-                      onChange={(e) => handleFiltroChange(key, e.target.value)}
-                      fullWidth
-                    />
-                  </TableCell>
-                ))}
+              <TableCell sx={{ display: 'none' }}><strong>ID</strong></TableCell>
+                <TableCell><strong>Zona</strong></TableCell>
+                <TableCell><strong>Representante</strong></TableCell>
+                <TableCell><strong>Médico</strong></TableCell>
+                <TableCell><strong>Documento</strong></TableCell>
+                <TableCell><strong>Banco</strong></TableCell>
+                <TableCell><strong>Cuenta</strong></TableCell>
+                <TableCell><strong>CCI</strong></TableCell>
+                <TableCell><strong>UNIDAD FM</strong></TableCell>
+                <TableCell><strong>PAGO DSP DEL NETO</strong></TableCell>
+                <TableCell><strong>Observacion</strong></TableCell>
                 <TableCell><strong>Acciones</strong></TableCell>
               </TableRow>
+               <TableRow>
+                <TableCell>
+                  <TextField
+                    variant="standard"
+                    value={filtroZona}
+                    onChange={(e) => setFiltroZona(e.target.value)}
+                    placeholder="Filtrar Zona"
+                    fullWidth
+                  />
+                </TableCell>
+                <TableCell>
+                  <TextField
+                    variant="standard"
+                    value={filtroRepresentante}
+                    onChange={(e) => setFiltroRepresentante(e.target.value)}
+                    placeholder="Filtrar Representante"
+                    fullWidth
+                  />
+                </TableCell>
+                <TableCell colSpan={8} />
+              </TableRow>
             </TableHead>
-
             <TableBody>
-              {registrosPaginados.map((reg, idx) => (
-                <TableRow key={idx}>
-                  <TableCell>{reg.zona}</TableCell>
-                  <TableCell>{reg.representante_Medico}</TableCell>
-                  <TableCell>{reg.medico}</TableCell>
-                  <TableCell>{reg.documento}</TableCell>
-                  <TableCell>{reg.descripcion}</TableCell>
-                  <TableCell>{reg.cuenta}</TableCell>
-                  <TableCell>{reg.cci}</TableCell>
-                  <TableCell>{reg.unidaD_FM}</TableCell>
-                  <TableCell>{reg.venta ?? '-'}</TableCell>
-                  <TableCell>
-                    <Button variant="outlined" onClick={() => abrirModal(reg)}>Registrar RXH</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+            {datosFiltrados.map((item, i) => (
+  <React.Fragment key={i}>
+    <TableRow hover>
+      <TableCell sx={{ display: 'none' }}>{item.id}</TableCell>
+      <TableCell>{item.zona}</TableCell>
+      <TableCell>{item.representante_Medico}</TableCell>
+      <TableCell>{item.medico}</TableCell>
+      <TableCell>{item.documento}</TableCell>
+      <TableCell>{item.descripcion_Banco}</TableCell>
+      <TableCell>{item.cuenta}</TableCell>
+      <TableCell>{item.cci}</TableCell>
+      <TableCell>{item.unidad_FM}</TableCell>
+      <TableCell>{item.pago_despues_del_Neto}</TableCell>
+      <TableCell>{item.observacion}</TableCell>
+      <TableCell>
+        <Button size="small" variant="outlined" onClick={() => abrirModal(item)}>
+          Registrar RXH
+        </Button>
+        <Button
+          size="small"
+          onClick={() => toggleDetalle(item.id)}
+          sx={{ ml: 1 }}
+        >
+          {detallesVisibles[item.id] ? 'Ocultar Detalle' : 'Ver Detalle'}
+        </Button>
+      </TableCell>
+    </TableRow>
+
+    <TableRow>
+      <TableCell colSpan={11} sx={{ p: 0, border: 0 }}>
+        <Collapse in={detallesVisibles[item.id]} timeout="auto" unmountOnExit>
+          <Box sx={{ p: 2, backgroundColor: '#f9f9f9' }}>
+            {/* Aquí los detalles */}
+            {item.fechaEmision ? (
+        <Table size="small" aria-label="detalle RXH">
+          <TableHead>
+            <TableRow>
+              <TableCell><strong>Fecha Emisión</strong></TableCell>
+              <TableCell><strong>Empresa</strong></TableCell>
+              <TableCell><strong>Tipo Documento</strong></TableCell>
+              <TableCell><strong>serie</strong></TableCell>
+              <TableCell><strong>nrodocumento</strong></TableCell>
+              <TableCell><strong>Importe</strong></TableCell>
+              <TableCell><strong>Detracción</strong></TableCell>
+              <TableCell><strong>Renta</strong></TableCell>
+              <TableCell><strong>Total a Pagar</strong></TableCell>
+              <TableCell><strong>RUC</strong></TableCell>
+              <TableCell><strong>Descripción</strong></TableCell>
+              <TableCell><strong>Observaciones</strong></TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            <TableRow>
+              <TableCell>{item.fechaEmision}</TableCell>
+              <TableCell>{item.empresa}</TableCell>
+              <TableCell>{item.tipoDocumento}</TableCell>
+              <TableCell>{item.serie}</TableCell>
+              <TableCell>{item.nrodocumento}</TableCell>
+              <TableCell>{item.importe}</TableCell>
+              <TableCell>{item.detraccion}</TableCell>
+              <TableCell>{item.renta}</TableCell>
+              <TableCell>{item.totalPagar}</TableCell>
+              <TableCell>{item.ruc}</TableCell>
+              <TableCell>{item.descripcion}</TableCell>
+              <TableCell>{item.observaciones}</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      ) : (
+        <Typography variant="body2" color="text.secondary">No se ha registrado detalle RXH.</Typography>
+      )}
+
+          </Box>
+        </Collapse>
+      </TableCell>
+    </TableRow>
+  </React.Fragment>
+))}
             </TableBody>
           </Table>
-
-          <TablePagination
-            rowsPerPageOptions={[15, 30, 50]}
-            component="div"
-            count={registrosFiltrados.length}
-            rowsPerPage={filasPorPagina}
-            page={pagina}
-            onPageChange={handleChangePagina}
-            onRowsPerPageChange={handleChangeFilasPorPagina}
-          />
         </TableContainer>
       )}
 
-    <Modal
-  open={modalAbierto}
-  onClose={cerrarModal}
-  closeAfterTransition
-  BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.5)' } }}
->
-  <Box
-    sx={{
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      width: { xs: '90%', sm: 600 },
-      bgcolor: 'background.paper',
-      boxShadow: '0 8px 24px rgba(0,0,0,0.2)',
-      p: 5,
-      borderRadius: 4,
-      maxHeight: '90vh',
-      overflowY: 'auto',
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 2,
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-    }}
-  >
-    <Typography variant="h5" fontWeight="bold" textAlign="center" mb={2}>
-      Registro RXH - {registroActual?.medico}
-    </Typography>
+      <Modal
+        open={modalAbierto}
+        onClose={cerrarModal}
+        aria-labelledby="modal-title"
+        aria-describedby="modal-description"
+        closeAfterTransition
+        BackdropProps={{ style: { backgroundColor: 'rgba(0, 0, 0, 0.45)' } }}
+      >
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            width: { xs: '90%', sm: 600 },
+            bgcolor: 'background.paper',
+            borderRadius: 3,
+            boxShadow: 24,
+            maxHeight: '85vh',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column'
+          }}
+        >
+          {/* Header */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2, borderBottom: '1px solid #eee' }}>
+            <Typography id="modal-title" variant="h6" component="h2" sx={{ fontWeight: '600' }}>
+              Registrar RXH - {registroActual?.medico}
+            </Typography>
+            <IconButton onClick={cerrarModal} size="small" aria-label="Cerrar modal">
+              <CloseIcon />
+            </IconButton>
+          </Box>
 
-    <TextField
-      label="Fecha de Emisión"
-      type="date"
-      name="fechaEmision"
-      value={formulario.fechaEmision}
-      onChange={handleChange}
-      InputLabelProps={{ shrink: true }}
-      fullWidth
-    />
+          {/* Body */}
+          <Box sx={{ p: 3, display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {/* Sección Datos Básicos */}
+            <Box sx={{
+              border: '1px solid #ddd',
+              borderRadius: 2,
+              p: 3,
+              backgroundColor: '#fafafa',
+              boxShadow: 'inset 0 0 5px #eee'
+            }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+                Datos Básicos
+              </Typography>
 
-    <TextField
-      select
-      label="Empresa"
-      name="empresa"
-      value={formulario.empresa}
-      onChange={handleChange}
-      fullWidth
-    >
-      {empresas.map((e, i) => (
-        <MenuItem key={i} value={e}>
-          {e}
-        </MenuItem>
-      ))}
-    </TextField>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Fecha Emisión"
+                    name="fechaEmision"
+                    type="date"
+                    value={formulario.fechaEmision}
+                    onChange={handleChange}
+                    InputLabelProps={{ shrink: true }}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
 
-    <FormControlLabel
-      control={
-        <Checkbox
-          name="verificacion"
-          checked={formulario.verificacion}
-          onChange={handleChange}
-          color="primary"
-        />
-      }
-      label="Verificación"
-    />
+                <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Empresa</InputLabel>
+                    <Select
+                      name="empresa"
+                      value={formulario.empresa}
+                      onChange={handleChange}
+                      label="Empresa"
+                    >
+                      {empresas.map((e) => (
+                        <MenuItem key={e} value={e}>{e}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-    <TextField
-      select
-      label="Tipo de Documento"
-      name="tipoDocumento"
-      value={formulario.tipoDocumento}
-      onChange={handleChange}
-      fullWidth
-    >
-      {tiposDocumento.map((doc, i) => (
-        <MenuItem key={i} value={doc}>
-          {doc}
-        </MenuItem>
-      ))}
-    </TextField>
+                <Grid item xs={12} sm={6} display="flex" alignItems="center">
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="verificacion"
+                        checked={formulario.verificacion}
+                        onChange={handleChange}
+                      />
+                    }
+                    label="Verificación"
+                  />
+                </Grid>
 
-    <Box
-      sx={{
-        display: 'flex',
-        gap: 2,
-        flexWrap: 'wrap',
-        justifyContent: 'space-between'
-      }}
-    >
-      <TextField
-        label="Importe"
-        name="importe"
-        type="number"
-        value={formulario.importe}
-        onChange={handleChange}
-        sx={{ flex: '1 1 30%' }}
-      />
-      <TextField
-        label="Renta"
-        name="renta"
-        type="number"
-        value={formulario.renta}
-        onChange={handleChange}
-        sx={{ flex: '1 1 30%' }}
-      />
-      <TextField
-        label="Total a Pagar"
-        name="totalPagar"
-        type="number"
-        value={formulario.totalPagar}
-        onChange={handleChange}
-        sx={{ flex: '1 1 30%' }}
-      />
-    </Box>
+                <Grid item xs={12} sm={6}>
+                <FormControl fullWidth size="small" sx={{ minWidth: 120 }}>
+                    <InputLabel>Tipo de Documento</InputLabel>
+                    <Select
+                      name="tipoDocumento"
+                      value={formulario.tipoDocumento}
+                      onChange={handleChange}
+                      label="Tipo de Documento"
+                    >
+                      {tiposDocumento.map((t) => (
+                        <MenuItem key={t} value={t}>{t}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </Grid>
+            </Box>
 
-    <TextField
-      label="RUC"
-      name="ruc"
-      value={formulario.ruc}
-      onChange={handleChange}
-      fullWidth
-    />
-    <TextField
-      label="Descripción"
-      name="descripcion"
-      value={formulario.descripcion}
-      onChange={handleChange}
-      fullWidth
-    />
-    <TextField
-      label="Observaciones"
-      name="observaciones"
-      value={formulario.observaciones}
-      onChange={handleChange}
-      fullWidth
-      multiline
-      rows={4}
-    />
+            {/* Sección Detalles Financieros */}
+            <Box sx={{
+              border: '1px solid #ddd',
+              borderRadius: 2,
+              p: 3,
+              backgroundColor: '#fafafa',
+              boxShadow: 'inset 0 0 5px #eee'
+            }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+                Detalles Financieros
+              </Typography>
 
-    <Box textAlign="right" mt={2}>
-      <Button variant="contained" color="primary" onClick={handleGuardar}>
-        Guardar
-      </Button>
-    </Box>
-  </Box>
-</Modal>
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="serie"
+                    name="serie"
+                    value={formulario.serie}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                  <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="nrodocumento"
+                    name="nrodocumento"
+                    value={formulario.nrodocumento}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Importe"
+                    name="importe"
+                    type="number"
+                    value={formulario.importe}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Detracción"
+                    name="detraccion"
+                    type="number"
+                    value={formulario.detraccion}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    label="Renta"
+                    name="renta"
+                    type="number"
+                    value={formulario.renta}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    label="Total a Pagar"
+                    name="totalPagar"
+                    type="number"
+                    value={formulario.totalPagar}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+
+            {/* Sección Información Adicional */}
+            <Box sx={{
+              border: '1px solid #ddd',
+              borderRadius: 2,
+              p: 3,
+              backgroundColor: '#fafafa',
+              boxShadow: 'inset 0 0 5px #eee'
+            }}>
+              <Typography variant="subtitle1" sx={{ mb: 2, fontWeight: 600, color: 'text.secondary' }}>
+                Información Adicional
+              </Typography>
+
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <TextField
+                    label="RUC"
+                    name="ruc"
+                    value={formulario.ruc}
+                    onChange={handleChange}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    label="Descripción"
+                    name="descripcion"
+                    value={formulario.descripcion}
+                    onChange={handleChange}
+                    multiline
+                    rows={2}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <TextField
+                    label="Observaciones"
+                    name="observaciones"
+                    value={formulario.observaciones}
+                    onChange={handleChange}
+                    multiline
+                    rows={3}
+                    fullWidth
+                    size="small"
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          </Box>
+
+          {/* Footer con botones */}
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 2,
+              p: 2,
+              borderTop: '1px solid #eee',
+              mt: 'auto',
+              bgcolor: 'background.paper',
+              borderRadius: '0 0 12px 12px'
+            }}
+          >
+            <Button variant="outlined" onClick={cerrarModal}>Cancelar</Button>
+            <Button variant="contained" onClick={handleGuardar}>Guardar</Button>
+          </Box>
+        </Box>
+      </Modal>
     </Container>
   );
 };
 
-export default RegistroRH;
+export default ConsultaPorMes;

@@ -61,10 +61,12 @@ const Convenio = () => {
 
   const handleObservacionChange = (index, value) => {
     const nuevos = [...convenios];
-    nuevos[index].observacion = value;
+    nuevos[index].observacion_vis = value;
     setConvenios(nuevos);
   };
 
+
+  
   const handleCheck = (index) => {
     const nuevos = [...convenios];
     nuevos[index].confirmado = !nuevos[index].confirmado;
@@ -87,9 +89,11 @@ const handleProcesar = async () => {
         cci: reg.cci,
         observacion: reg.observacion,
         venta: reg.venta,
-        unidad_FM: String(reg.unidad_FM ?? ''),
-        pago_despues_del_Neto: reg.venta,
-        zona: reg.zona
+        unidad_FM: String(reg.unidaD_FM ?? ''),
+        pago_despues_del_Neto:reg.unidaD_FM*10,
+        zona: reg.zona,
+        Fecha_corte:fechaFin,
+        observacion_vis:reg.observacion_vis
       };
 
       await axios.post(`${BASE_URL}/api/Contabilidad_Convenio`, nuevo);
@@ -146,14 +150,20 @@ const handleProcesar = async () => {
                   <TableCell><strong>Cuenta</strong></TableCell>
                   <TableCell><strong>CCI</strong></TableCell>
                    <TableCell><strong>UNIDAD FM</strong></TableCell>
+                   <TableCell><strong>Pago dsp del NETO</strong></TableCell>
                   <TableCell><strong>Venta (S/)</strong></TableCell>
-            
+                  <TableCell><strong>Observacion</strong></TableCell>
                   <TableCell><strong>Confirmar</strong></TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
                 {convenios.map((c, i) => (
-                  <TableRow key={i}>
+                   <TableRow
+                   key={i}
+                   sx={{
+                     backgroundColor: c.val === "1" ? 'rgba(255, 223, 186, 0.5)' : 'inherit' // color de fondo suave para destacar
+                   }}
+                 >
                       <TableCell>{c.zona}</TableCell>
                     <TableCell>{c.medico}</TableCell>
                        <TableCell>{c.documento}</TableCell>
@@ -161,13 +171,24 @@ const handleProcesar = async () => {
                     <TableCell>{c.cuenta}</TableCell>
                     <TableCell>{c.cci}</TableCell>
                      <TableCell>{c.unidaD_FM}</TableCell>
+                     <TableCell>{c.pago_despues_del_Neto}</TableCell>
                     <TableCell>{c.venta ?? '-'}</TableCell>
-                  
                     <TableCell>
-                      <Checkbox
-                        checked={c.confirmado}
-                        onChange={() => handleCheck(i)}
-                      />
+  <TextField
+    value={c.observacion_vis}
+    onChange={(e) => handleObservacionChange(i, e.target.value)}
+    size="small"
+    variant="outlined"
+    fullWidth
+    disabled={c.val == "1"}  // opcional: deshabilitar si ya está procesado
+  />
+</TableCell>
+                    <TableCell>
+                    <Checkbox
+  checked={c.confirmado}
+  onChange={() => handleCheck(i)}
+  disabled={c.val == "1"} // Desactiva si val no es "1"
+/>
                     </TableCell>
                   </TableRow>
                 ))}

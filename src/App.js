@@ -15,6 +15,7 @@ import BI from './Pages/BI/BI';
 import Cuota from './Pages/Cuota/Cuota';
 import Convenio from './Pages/Convenio/Convenio';
 import RegistroRH from './Pages/Convenio/RegistroRH';
+import PlantillaGenerador from './Pages/Convenio/PlantillaGenerador';
 
 import { AuthProvider, useAuth } from './Compo/AuthContext';
 
@@ -74,6 +75,9 @@ const AppRoutes = () => {
 
    <Route path="/RegistroRH" element={
             <PrivateRoute><RegistroRH /></PrivateRoute>
+          } />
+             <Route path="/PlantillaGenerador" element={
+            <PrivateRoute><PlantillaGenerador /></PrivateRoute>
           } />
    <Route path="/Convenio" element={
             <PrivateRoute><Convenio /></PrivateRoute>
