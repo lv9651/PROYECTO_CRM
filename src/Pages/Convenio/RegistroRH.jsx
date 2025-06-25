@@ -28,7 +28,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { BASE_URL } from '../../Conf/config';
-
+import TablePagination from '@mui/material/TablePagination';
 const meses = [
   { nombre: 'Enero', valor: 1 },
   { nombre: 'Febrero', valor: 2 },
@@ -63,6 +63,9 @@ const ConsultaPorMes = () => {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [registroActual, setRegistroActual] = useState(null);
 
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 4;
+
   const formatearFechaInput = (fecha) => {
     if (!fecha) return '';
     const d = new Date(fecha);
@@ -85,7 +88,8 @@ const ConsultaPorMes = () => {
     totalPagar: '',
     ruc: '',
     descripcion: '',
-    observaciones: ''
+    observaciones: '',
+    aprob_documento: ''
   });
 
   const handleBuscar = () => {
@@ -134,7 +138,8 @@ const ConsultaPorMes = () => {
       totalPagar: registro.totalPagar || '',
       ruc: registro.ruc || '',
       descripcion: registro.descripcion || '',
-      observaciones: registro.observaciones || ''
+      observaciones: registro.observaciones || '',
+         aprob_documento: registro.aprob_documento || ''
     });
   
     setModalAbierto(true);
@@ -184,7 +189,8 @@ const ConsultaPorMes = () => {
       TotalPagar: parseFloat(formulario.totalPagar) || 0,
       Ruc: formulario.ruc,
       Descripcion: formulario.descripcion,
-      Observaciones: formulario.observaciones
+      Observaciones: formulario.observaciones,
+          aprob_documento: formulario.aprob_documento
     };
   
     axios.put(`${BASE_URL}/api/Contabilidad_Convenio/${registroActual.id}`, payload)
@@ -203,6 +209,15 @@ const ConsultaPorMes = () => {
   (item.zona?.toLowerCase() || '').includes(filtroZona.toLowerCase()) &&
   (item.representante_Medico?.toLowerCase() || '').includes(filtroRepresentante.toLowerCase())
 );
+  const datosPaginados = datosFiltrados.slice(page * rowsPerPage, (page + 1) * rowsPerPage);
+ const handleFiltroZonaChange = (e) => {
+    setFiltroZona(e.target.value);
+    setPage(0);
+  };
+  const handleFiltroRepresentanteChange = (e) => {
+    setFiltroRepresentante(e.target.value);
+    setPage(0);
+  };  
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom>
@@ -235,8 +250,29 @@ const ConsultaPorMes = () => {
       {loading && <CircularProgress />}
 
       {!loading && datos.length > 0 && (
-        <TableContainer component={Paper}>
-          <Table>
+ <TableContainer 
+  component={Paper}
+  sx={{
+    maxWidth: '100%',
+    overflowX: 'auto',
+    border: '1px solid #e0e0e0', // Borde exterior para el contenedor
+    '& .MuiTable-root': {
+      borderCollapse: 'collapse', // Esto asegura que los bordes se unan correctamente
+    },
+    '& .MuiTableCell-root': {
+      border: '1px solid #e0e0e0', // Borde para todas las celdas
+      padding: '8px',
+      fontSize: '0.75rem',
+    },
+    '& .MuiTableHead-root .MuiTableCell-root': {
+      backgroundColor: '#f5f5f5',
+      fontWeight: 'bold',
+      borderBottom: '2px solid #bdbdbd', // Borde más grueso para el encabezado
+    }
+  }}
+>
+    
+   <Table size="small">   
             <TableHead>
               <TableRow>
               <TableCell sx={{ display: 'none' }}><strong>ID</strong></TableCell>
@@ -250,6 +286,7 @@ const ConsultaPorMes = () => {
                 <TableCell><strong>UNIDAD FM</strong></TableCell>
                 <TableCell><strong>PAGO DSP DEL NETO</strong></TableCell>
                 <TableCell><strong>Observacion</strong></TableCell>
+                 <TableCell><strong>Aprob. Doc</strong></TableCell>
                 <TableCell><strong>Acciones</strong></TableCell>
               </TableRow>
                <TableRow>
@@ -275,7 +312,7 @@ const ConsultaPorMes = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-            {datosFiltrados.map((item, i) => (
+            {datosPaginados.map((item, i) => (
   <React.Fragment key={i}>
     <TableRow hover>
       <TableCell sx={{ display: 'none' }}>{item.id}</TableCell>
@@ -289,6 +326,7 @@ const ConsultaPorMes = () => {
       <TableCell>{item.unidad_FM}</TableCell>
       <TableCell>{item.pago_despues_del_Neto}</TableCell>
       <TableCell>{item.observacion}</TableCell>
+        <TableCell>{item.aprob_documento}</TableCell>
       <TableCell>
         <Button size="small" variant="outlined" onClick={() => abrirModal(item)}>
           Registrar RXH
@@ -303,13 +341,32 @@ const ConsultaPorMes = () => {
       </TableCell>
     </TableRow>
 
-    <TableRow>
-      <TableCell colSpan={11} sx={{ p: 0, border: 0 }}>
-        <Collapse in={detallesVisibles[item.id]} timeout="auto" unmountOnExit>
-          <Box sx={{ p: 2, backgroundColor: '#f9f9f9' }}>
-            {/* Aquí los detalles */}
-            {item.fechaEmision ? (
-        <Table size="small" aria-label="detalle RXH">
+  <TableRow>
+  <TableCell colSpan={11} sx={{ p: 0, border: 0 }}>
+    <Collapse in={detallesVisibles[item.id]} timeout="auto" unmountOnExit>
+      <Box sx={{ 
+        p: 2, 
+        backgroundColor: '#f0f7ff', // Fondo azul claro
+        borderLeft: '3px solid #1976d2', // Borde lateral azul
+        margin: '8px 0',
+        borderRadius: '4px'
+      }}>
+        <Table 
+          size="small" 
+          aria-label="detalle RXH"
+          sx={{
+            '& .MuiTableCell-root': {
+              backgroundColor: '#f0f7ff', // Mismo fondo para todas las celdas
+              border: '1px solid #bbdefb', // Bordes azules claros
+              fontSize: '0.75rem'
+            },
+            '& .MuiTableHead-root .MuiTableCell-root': {
+              backgroundColor: '#e3f2fd', // Fondo más oscuro para encabezados
+              fontWeight: 'bold',
+              borderBottom: '2px solid #90caf9'
+            }
+          }}
+        >
           <TableHead>
             <TableRow>
               <TableCell><strong>Fecha Emisión</strong></TableCell>
@@ -324,6 +381,7 @@ const ConsultaPorMes = () => {
               <TableCell><strong>RUC</strong></TableCell>
               <TableCell><strong>Descripción</strong></TableCell>
               <TableCell><strong>Observaciones</strong></TableCell>
+            
             </TableRow>
           </TableHead>
           <TableBody>
@@ -355,6 +413,14 @@ const ConsultaPorMes = () => {
 ))}
             </TableBody>
           </Table>
+                <TablePagination
+  component="div"
+  count={datosFiltrados.length}
+  page={page}
+  onPageChange={(event, newPage) => setPage(newPage)}
+  rowsPerPage={rowsPerPage}
+  rowsPerPageOptions={[rowsPerPage]} // Sólo 5 filas por página, sin opción a cambiar
+/>
         </TableContainer>
       )}
 

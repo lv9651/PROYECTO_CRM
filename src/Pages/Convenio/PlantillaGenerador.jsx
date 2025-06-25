@@ -112,7 +112,79 @@ fecha_registro:'FECHA REGISTRO',
 
     // ... agrega solo los necesarios para opción 2
   },
-  // ... y así con las demás opciones
+  3: {
+   ctA_CONTABLE: 'CTA CONTABLE',
+  añO_Y_MES_PROCESO:'AÑO Y MES PROCESO',
+  subdiario:'SUBDIARIO',
+  comprobante:'COMPROBANTE',
+  fechA_DOCUMENTO:'FECHA DOCUMENTO',
+  tipO_ANEXO:'TIPO ANEXO',
+  codigO_DE_ANEXO:'CODIGO DE ANEXO',
+  tipO_DOCUMENTO:'TIPO DOCUMENTO',
+  nrO_DOCUMENTO:'NRO DOCUMENTO',
+    fechA_VENCIMIENTO:'FECHA VENCIMIENTO',
+moneda:'MONEDA',
+
+  importe:'IMPORTE',
+  conv:'CONV',
+fecha_registro:'FECHA REGISTRO',
+  tipo_Cambio:'TIPO CAMBIO',
+  glosa:'GLOSA',
+
+
+  centrO_DE_COSTOS:'CENTRO DE COSTOS',
+
+  glosA_MOVIMIENTO:'GLOSA MOVIMIENTO',
+  documentO_ANULADO:'DOCUMENTO ANULADO',
+
+  debE_HABER:'DEBE / HABER',
+
+  mediO_DE_PAGO:'MEDIO DE PAGO',
+
+  nrO_FILE:'NRO FILE',
+
+    flujO_DE_EFECTIVO:'FLUJO DE EFECTIVO',
+
+    // ... agrega solo los necesarios para opción 2
+  },
+
+
+
+  4: {
+   ctA_CONTABLE: 'CTA CONTABLE',
+  añO_Y_MES_PROCESO:'AÑO Y MES PROCESO',
+  subdiario:'SUBDIARIO',
+  comprobante:'COMPROBANTE',
+  fechA_DOCUMENTO:'FECHA DOCUMENTO',
+  tipO_ANEXO:'TIPO ANEXO',
+  codigO_DE_ANEXO:'CODIGO DE ANEXO',
+  tipO_DOCUMENTO:'TIPO DOCUMENTO',
+  nrO_DOCUMENTO:'NRO DOCUMENTO',
+    fechA_VENCIMIENTO:'FECHA VENCIMIENTO',
+moneda:'MONEDA',
+
+  importe:'IMPORTE',
+  conv:'CONV',
+fecha_registro:'FECHA REGISTRO',
+  tipo_Cambio:'TIPO CAMBIO',
+  glosa:'GLOSA',
+
+
+  centrO_DE_COSTOS:'CENTRO DE COSTOS',
+
+  glosA_MOVIMIENTO:'GLOSA MOVIMIENTO',
+  documentO_ANULADO:'DOCUMENTO ANULADO',
+
+  debE_HABER:'DEBE / HABER',
+
+  mediO_DE_PAGO:'MEDIO DE PAGO',
+
+  nrO_FILE:'NRO FILE',
+
+    flujO_DE_EFECTIVO:'FLUJO DE EFECTIVO',
+
+    // ... agrega solo los necesarios para opción 2
+  },
 };
 
 const PlantillaGenerador = () => {
