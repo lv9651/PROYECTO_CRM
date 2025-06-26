@@ -185,6 +185,28 @@ fecha_registro:'FECHA REGISTRO',
 
     // ... agrega solo los necesarios para opción 2
   },
+
+
+   5: {
+   mes: 'MES DEL REPORTE-CONVENIO',
+  zona:'LOCAL',
+  representante_Medico:'VISITADOR MEDICO',
+  tipoDocumento:'COMPROBANTE',
+  descripcion_Banco:'BANCO',
+  fechaEmision:'FECHA EMISION DEL COMPROBANTE',
+  fecha_vali_cont:'DIA DE VALIDACION-CONTABILIDAD',
+   fecha_valid_tesoreria:'DIA DE VALIDACION-TESORERIA',
+  observaciones:'OBSERVACION',
+  cuenta:'NRO CUENTA',
+    cci:'TRANSFERENCIAS INTERBANCARIAS',
+tipo_doc_ide:'TIPO DOCUMENTO',
+documento:'NUMERO DE DOCUMENTO IDENTIDAD',
+  medico:'NOMBRE DEL PROVEEDOR',
+totalPagar:'MONTO DEL ABONO',
+  
+
+    // ... agrega solo los necesarios para opción 2
+  },
 };
 
 const PlantillaGenerador = () => {

@@ -29,6 +29,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import axios from 'axios';
 import { BASE_URL } from '../../Conf/config';
 import TablePagination from '@mui/material/TablePagination';
+import { useAuth } from '../../Compo/AuthContext';
 const meses = [
   { nombre: 'Enero', valor: 1 },
   { nombre: 'Febrero', valor: 2 },
@@ -49,6 +50,7 @@ const empresas = ['QF', 'MS', 'VINALI'];
 const tiposDocumento = ['RH', 'FT'];
 
 const ConsultaPorMes = () => {
+  const { user } = useAuth();
   const [anio, setAnio] = useState('');
   const [mes, setMes] = useState('');
   const [datos, setDatos] = useState([]);
@@ -62,10 +64,10 @@ const ConsultaPorMes = () => {
   const [filtroRepresentante, setFiltroRepresentante] = useState('');
   const [modalAbierto, setModalAbierto] = useState(false);
   const [registroActual, setRegistroActual] = useState(null);
-
+const [rentaDisabled, setRentaDisabled] = useState(false);
   const [page, setPage] = useState(0);
   const rowsPerPage = 4;
-
+const [detraccionDisabled, setDetraccionDisabled] = useState(false);
   const formatearFechaInput = (fecha) => {
     if (!fecha) return '';
     const d = new Date(fecha);
@@ -150,25 +152,80 @@ const ConsultaPorMes = () => {
     setRegistroActual(null);
   };
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    const val = type === 'checkbox' ? checked : value;
+const handleChange = (e) => {
+  const { name, value, type, checked } = e.target;
+  const val = type === 'checkbox' ? checked : value;
 
-    const tempForm = {
-      ...formulario,
-      [name]: val
-    };
-
-    const importe = parseFloat(name === 'importe' ? val : tempForm.importe) || 0;
-    const detraccion = parseFloat(name === 'detraccion' ? val : tempForm.detraccion) || 0;
-    const renta = parseFloat(name === 'renta' ? val : tempForm.renta) || 0;
-    const totalPagar = (importe - detraccion - renta).toFixed(2);
-
-    setFormulario({
-      ...tempForm,
-      totalPagar
-    });
+  let tempForm = {
+    ...formulario,
+    [name]: val
   };
+
+  const tipoDoc = name === 'tipoDocumento' ? val : tempForm.tipoDocumento;
+  const importe = parseFloat(name === 'importe' ? val : tempForm.importe) || 0;
+  let renta = parseFloat(name === 'renta' ? val : tempForm.renta) || 0;
+
+  const igv = importe * 0.18;
+  const baseConIgv = importe + igv;
+  const detraccionCalculada = (baseConIgv * 0.12).toFixed(2);
+
+  // ---------- Tipo de documento ----------
+  if (name === 'tipoDocumento') {
+    if (val === 'RH') {
+      tempForm.detraccion = 0;
+      tempForm.renta = 0;
+      setDetraccionDisabled(true);
+      setRentaDisabled(false);
+    } else {
+      setRentaDisabled(val === 'FT');
+      if (val === 'FT') tempForm.renta = 0;
+
+      if (importe > 700) {
+        tempForm.detraccion = detraccionCalculada;
+        setDetraccionDisabled(false);
+      } else {
+        tempForm.detraccion = 0;
+        setDetraccionDisabled(true);
+      }
+    }
+  }
+
+  // ---------- Importe ----------
+  if (name === 'importe') {
+    if (tipoDoc !== 'RH') {
+      if (importe > 700) {
+        tempForm.detraccion = detraccionCalculada;
+        setDetraccionDisabled(false);
+      } else {
+        tempForm.detraccion = 0;
+        setDetraccionDisabled(true);
+      }
+    } else {
+      tempForm.detraccion = 0;
+      setDetraccionDisabled(true);
+    }
+  }
+
+  // ---------- Renta (si cambia directamente) ----------
+  if (name === 'renta' && tipoDoc === 'FT') {
+    tempForm.renta = 0;
+  }
+
+  // ---------- Cálculo total a pagar ----------
+  const detraccion = parseFloat(tempForm.detraccion) || 0;
+
+  let totalPagar = 0;
+  if (tipoDoc === 'FT') {
+    totalPagar = (importe + igv-detraccion).toFixed(2);
+  } else {
+    totalPagar = (importe - detraccion - renta).toFixed(2);
+  }
+
+  setFormulario({
+    ...tempForm,
+    totalPagar
+  });
+};
   const handleGuardar = () => {
     if (!registroActual || !registroActual.id) {
       alert('Registro no válido para actualizar');
@@ -190,7 +247,8 @@ const ConsultaPorMes = () => {
       Ruc: formulario.ruc,
       Descripcion: formulario.descripcion,
       Observaciones: formulario.observaciones,
-          aprob_documento: formulario.aprob_documento
+          aprob_documento: formulario.aprob_documento,
+        idempleado: parseInt(user?.emp_codigo) || 0
     };
   
     axios.put(`${BASE_URL}/api/Contabilidad_Convenio/${registroActual.id}`, payload)
@@ -589,6 +647,7 @@ const ConsultaPorMes = () => {
                     onChange={handleChange}
                     fullWidth
                     size="small"
+                     disabled={detraccionDisabled}
                   />
                 </Grid>
 
@@ -601,6 +660,7 @@ const ConsultaPorMes = () => {
                     onChange={handleChange}
                     fullWidth
                     size="small"
+                     disabled={rentaDisabled}
                   />
                 </Grid>
 

@@ -107,7 +107,8 @@ const Convenio = () => {
           zona: reg.zona,
           Fecha_corte: fechaFin,
           observacion_vis: reg.observacion_vis,
-          aprob_documento: reg.aprob_documento
+          aprob_documento: reg.aprob_documento,
+          documento: reg.documento
         };
 
         await axios.post(`${BASE_URL}/api/Contabilidad_Convenio`, nuevo);
@@ -159,7 +160,28 @@ const Convenio = () => {
 
       {!loading && convenios.length > 0 && (
         <>
-          <TableContainer component={Paper}>
+         <TableContainer 
+          component={Paper}
+          sx={{
+            maxWidth: '100%',
+            overflowX: 'auto',
+            border: '1px solid #e0e0e0', // Borde exterior para el contenedor
+            '& .MuiTable-root': {
+              borderCollapse: 'collapse', // Esto asegura que los bordes se unan correctamente
+            },
+            '& .MuiTableCell-root': {
+              border: '1px solid #e0e0e0', // Borde para todas las celdas
+              padding: '8px',
+              fontSize: '0.75rem',
+            },
+            '& .MuiTableHead-root .MuiTableCell-root': {
+              backgroundColor: '#f5f5f5',
+              fontWeight: 'bold',
+              borderBottom: '2px solid #bdbdbd', // Borde más grueso para el encabezado
+            }
+          }}
+        >
+            
             <Table>
               <TableHead>
                 <TableRow>
