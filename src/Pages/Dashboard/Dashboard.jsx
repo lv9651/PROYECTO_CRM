@@ -111,6 +111,14 @@ const Dashboard = () => {
       color: '#799e2e', 
       path: '/Cuota',
       allowedProfiles: ['ADMINISTRADOR','REP.MEDICO'] // Solo admin
+    },
+
+      { 
+      title: 'CUPON', 
+      icon: <AttachMoney fontSize="large" />, 
+      color: '#799e2e', 
+      path: '/Cupon',
+      allowedProfiles: ['ADMINISTRADOR'] // Solo admin
     }
   ];
 
