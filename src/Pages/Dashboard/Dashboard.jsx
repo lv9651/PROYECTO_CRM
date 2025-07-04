@@ -8,7 +8,7 @@ import {
   People, MonetizationOn, Event, TrendingUp,
   Business, Assignment, CalendarToday,AttachMoney,
   MeetingRoom, Person, InsertChartOutlined as ChartIcon ,
-  HandshakeRounded,PrecisionManufacturingSharp
+  HandshakeRounded,PrecisionManufacturingSharp,CreditCard 
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../Compo/AuthContext';
@@ -115,8 +115,8 @@ const Dashboard = () => {
 
       { 
       title: 'CUPON', 
-      icon: <AttachMoney fontSize="large" />, 
-      color: '#799e2e', 
+      icon: <CreditCard fontSize="large" />, 
+      color: '#00665b', 
       path: '/Cupon',
       allowedProfiles: ['ADMINISTRADOR'] // Solo admin
     }
