@@ -259,6 +259,7 @@ useEffect(() => {
 }
 
 const todosClientes = ClienteSeleccionadas.length === 1 && ClienteSeleccionadas[0].cliTercero_codigo === '*';
+const todosProductos= productosSeleccionados.length === 1 && productosSeleccionados[0].idproducto === '*';
 
     const jsonParaGuardar = {
       iddescuento: 0,
@@ -280,19 +281,21 @@ const todosClientes = ClienteSeleccionadas.length === 1 && ClienteSeleccionadas[
     }))),
 dias: empresa === 'QF' ? JSON.stringify(diasSeleccionados) : '',
 tododias: diasSeleccionados.length === 7 ? true : false,
-      todoproducto: productosSeleccionados.length === productosAPI.length,
+     todoproducto: todosProductos,
       descuentotodotipoproducto: 0.0,
       idtipoproducto: '',
       excluiridproducto: '',
 
-      descuentotodoproducto: 0.0,
-      idproducto: JSON.stringify(productosSeleccionados.map(p => ({
-        idproducto: p.idproducto,
-        descripcion: p.nombre,
-        descuento: parseFloat(monto) / 100
-      }))),
+  descuentotodoproducto: todosProductos ? parseFloat(monto) / 100 : 0.0,
+   idproducto: todosProductos
+  ? '*'
+  : JSON.stringify(productosSeleccionados.map(p => ({
+      idproducto: p.idproducto,
+      descripcion: p.nombre,
+      descuento: parseFloat(monto) / 100
+    }))),
     todocliente:todosClientes,
-      descuentotodocliente: 0.0,
+    descuentotodocliente: todosClientes ? parseFloat(monto) / 100 : 0.0,
       idcliente:  todosClientes
     ? '*'
     : ClienteSeleccionadas.length === 0 
@@ -321,14 +324,13 @@ tododias: diasSeleccionados.length === 7 ? true : false,
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify(jsonParaGuardar)
 })
-  .then(res => res.json())
-  .then(data => {
-    if (!Array.isArray(data)) {
-      console.error("Respuesta inesperada, se esperaba un array:", data);
-      setError("La respuesta del servidor no es válida.");
-      return;
-    }
-
+ .then(res => res.json())
+.then(data => {
+  if (!(Array.isArray(data) || (data && typeof data === 'object' && 'mensaje' in data))) {
+    console.error("Respuesta inesperada, se esperaba un array o un objeto con 'mensaje':", data);
+    setError("La respuesta del servidor no es válida.");
+    return;
+  }
     const list = data.map(c => ({
       id: c.iddescuento,
       nombre: c.descripcion,
@@ -416,32 +418,49 @@ tododias: diasSeleccionados.length === 7 ? true : false,
         </FormControl>
         {empresa && (
           <>
-           <Autocomplete
+          <Autocomplete
   multiple
-  options={[{ nombre: '__ALL__' }, ...productosAPI]}
-  getOptionLabel={option => option.nombre === '__ALL__' ? 'Todos los productos' : option.nombre}
-  value={productosSeleccionados}
-  onChange={(e, val) =>
-    val.some(x => x.nombre === '__ALL__')
-      ? setProductosSeleccionados(productosAPI)
-      : setProductosSeleccionados(val)
+  disableCloseOnSelect
+  options={[{ nombre: '__ALL__', idproducto: '*' }, ...productosAPI]}
+  getOptionLabel={(option) =>
+    option.nombre === '__ALL__'
+      ? 'Todos los productos'
+      : option.nombre
   }
-  isOptionEqualToValue={(o, v) => o.nombre === v.nombre}
-  renderTags={(selected, getTagProps) => {
-    if (selected.length === productosAPI.length) {
-      return ['Todos los productos'].map((value, index) => (
-        <span key={index} style={{ padding: '4px 8px', background: '#e0f7fa', borderRadius: 8 }}>
-          {value}
-        </span>
-      ));
+  value={
+    productosSeleccionados.length === 1 && productosSeleccionados[0].idproducto === '*'
+      ? [{ nombre: '__ALL__', idproducto: '*' }]
+      : productosSeleccionados
+  }
+  onChange={(e, val) => {
+    if (val.some(x => x.nombre === '__ALL__')) {
+      setProductosSeleccionados([{ nombre: '__ALL__', idproducto: '*' }]);
+    } else {
+      setProductosSeleccionados(val);
     }
+  }}
+  isOptionEqualToValue={(o, v) => o.idproducto === v.idproducto}
+  renderTags={(selected, getTagProps) => {
+    if (
+      selected.length === 1 &&
+      selected[0].idproducto === '*'
+    ) {
+      return (
+        <span {...getTagProps({ index: 0 })}>
+          Todos los productos
+        </span>
+      );
+    }
+
     return selected.map((option, index) => (
-      <span key={index} style={{ padding: '4px 8px', background: '#f0f0f0', borderRadius: 8 }}>
+      <span key={index} {...getTagProps({ index })}>
         {option.nombre}
       </span>
     ));
   }}
-  renderInput={params => <TextField {...params} label="Productos" placeholder="Buscar..." />}
+  renderInput={(params) => (
+    <TextField {...params} label="Productos" placeholder="Buscar producto" />
+  )}
   PopperComponent={CustomPopper}
 />
            <Autocomplete

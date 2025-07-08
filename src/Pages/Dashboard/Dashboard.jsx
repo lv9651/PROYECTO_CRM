@@ -118,7 +118,7 @@ const Dashboard = () => {
       icon: <CreditCard fontSize="large" />, 
       color: '#00665b', 
       path: '/Cupon',
-      allowedProfiles: ['ADMINISTRADOR'] // Solo admin
+      allowedProfiles: ['COMERCIAL'] // Solo admin
     }
   ];
 
