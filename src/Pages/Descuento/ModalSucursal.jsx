@@ -2,13 +2,16 @@ import React, { useEffect, useState } from 'react';
 import {
   Dialog, DialogTitle, DialogContent, DialogActions,
   Table, TableBody, TableCell, TableHead, TableRow,
-  Button, Checkbox, Typography
+  Button, Checkbox, Typography, CircularProgress
 } from '@mui/material';
 import axios from 'axios';
+import { useAuth } from '../../Compo/AuthContext';
 
 const ModalSucursal = ({ open, onClose, descuento }) => {
+  const { user } = useAuth();
   const [sucursales, setSucursales] = useState([]);
   const [sucursalesSeleccionadas, setSucursalesSeleccionadas] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (open && descuento?.idDescuento) {
@@ -17,7 +20,6 @@ const ModalSucursal = ({ open, onClose, descuento }) => {
         .then(res => {
           const data = res.data || [];
           setSucursales(data);
-          // Preseleccionar las sucursales ya asignadas
           const seleccionadas = data.filter(s => s.asignado).map(s => s.suc_Codigo);
           setSucursalesSeleccionadas(seleccionadas);
         })
@@ -35,32 +37,36 @@ const ModalSucursal = ({ open, onClose, descuento }) => {
     );
   };
 
-const handleGuardar = async () => {
-  try {
-  const payload = {
-  IdDescuento: descuento?.idDescuento,
-  IdSucursales: sucursales
-    .filter(s => sucursalesSeleccionadas.includes(s.suc_Codigo))
-    .map(s => s.suc_Codigo.toString()), // si backend espera List<string>
-  UsuarioCrea: 'pri'
-};
+  const handleGuardar = async () => {
+    setLoading(true);
 
-    const response = await axios.post(
-      'https://localhost:7146/api/descuento/asignar-sucursales',
-      payload
-    );
+    try {
+      const payload = {
+        IdDescuento: descuento?.idDescuento,
+        IdSucursales: sucursales
+          .filter(s => sucursalesSeleccionadas.includes(s.suc_Codigo))
+          .map(s => s.suc_Codigo.toString()),
+        UsuarioCrea: user?.emp_codigo || ''
+      };
 
-    if (response.data.mensaje === 'ok') {
-      console.log('Sucursales asignadas correctamente');
-      onClose();
-    } else {
-      alert('Error: ' + response.data.error);
+      const response = await axios.post(
+        'https://localhost:7146/api/descuento/asignar-sucursales',
+        payload
+      );
+
+      if (response.data.mensaje === 'ok') {
+        console.log('Sucursales asignadas correctamente');
+        onClose();
+      } else {
+        alert('Error: ' + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error en el POST:', error);
+      alert('Error inesperado al guardar las sucursales.');
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error('Error en el POST:', error);
-    alert('Error inesperado al guardar las sucursales.');
-  }
-};
+  };
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
@@ -99,8 +105,15 @@ const handleGuardar = async () => {
       </DialogContent>
 
       <DialogActions>
-        <Button onClick={onClose}>Cancelar</Button>
-        <Button variant="contained" onClick={handleGuardar}>Guardar</Button>
+        <Button onClick={onClose} disabled={loading}>Cancelar</Button>
+        <Button
+          variant="contained"
+          onClick={handleGuardar}
+          disabled={loading}
+          startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+        >
+          {loading ? 'Guardando...' : 'Guardar'}
+        </Button>
       </DialogActions>
     </Dialog>
   );

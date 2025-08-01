@@ -10,6 +10,7 @@ import {
 
 // IMPORTA TU COMPONENTE FUNCIONAL REAL
 import ListarDescuento from './ListarDescuento';
+import Mantenimiento from './Mantenimiento';
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   '&.Mui-selected, &.Mui-selected:hover': {
@@ -29,7 +30,7 @@ const descuentoMenu = [
     icon: <Discount color="primary" />,
     subItems: [
       { name: "Listar", icon: <FormatListBulleted />, tipo: "Vista", component: <ListarDescuento /> },
-      { name: "Mantenimiento", icon: <Build />, tipo: "Vista", component: <div>Mantenimiento</div> },
+      { name: "Mantenimiento", icon: <Build />, tipo: "Vista", component: <Mantenimiento />},
       { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },
       { name: "Pack de promociones", icon: <ShoppingCart />, tipo: "Vista", component: <div>Pack de promociones</div> },
       { name: "Productos Obsequio", icon: <CardGiftcard />, tipo: "Vista", component: <div>Productos Obsequio</div> }
