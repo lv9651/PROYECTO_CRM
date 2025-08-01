@@ -8,7 +8,7 @@ import {
   People, MonetizationOn, Event, TrendingUp,
   Business, Assignment, CalendarToday,AttachMoney,
   MeetingRoom, Person, InsertChartOutlined as ChartIcon ,
-  HandshakeRounded,PrecisionManufacturingSharp,CreditCard 
+  HandshakeRounded,PrecisionManufacturingSharp,CreditCard ,Discount
 } from '@mui/icons-material';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../Compo/AuthContext';
@@ -89,7 +89,13 @@ const Dashboard = () => {
       path: '/RegistroRH',
       allowedProfiles: ['CONTABILIDAD'] // Solo admin
     },
-
+{
+  title: 'Descuento',
+  icon: <Discount fontSize="large" />,
+  color: '#00bcd4',
+  path: '/descuento',
+  allowedProfiles: ['ADMINISTRADOR', 'COMERCIAL']
+},
         { 
       title: 'PLANTILLAS', 
       icon: <PrecisionManufacturingSharp fontSize="large" />, 

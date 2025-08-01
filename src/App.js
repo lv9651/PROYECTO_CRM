@@ -16,9 +16,9 @@ import Cuota from './Pages/Cuota/Cuota';
 import Convenio from './Pages/Convenio/Convenio';
 import RegistroRH from './Pages/Convenio/RegistroRH';
 import PlantillaGenerador from './Pages/Convenio/PlantillaGenerador';
-
+import Descuento from './Pages/Descuento/DescuentoModule';
 import Cupon from './Pages/Cupon/CuponesEmpresa';
-
+import ListarDescuento from './Pages/Descuento/ListarDescuento';
 import { AuthProvider, useAuth } from './Compo/AuthContext';
 
 // Componente para rutas privadas
@@ -84,7 +84,12 @@ const AppRoutes = () => {
    <Route path="/Convenio" element={
             <PrivateRoute><Convenio /></PrivateRoute>
           } />
-
+<Route path="/descuento" element={
+  <PrivateRoute><Descuento /></PrivateRoute>
+} />
+<Route path="/descuento/listar" element={
+  <PrivateRoute><ListarDescuento /></PrivateRoute>
+} />
             <Route path="/Cupon" element={
             <PrivateRoute><Cupon /></PrivateRoute>
           } />
