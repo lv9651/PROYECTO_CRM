@@ -3,7 +3,7 @@ import {
   Stepper, Step, StepLabel,
   TextField, Button,
   RadioGroup, Radio, FormLabel, Grid, Typography,
-  CircularProgress, Table, TableBody, TableCell, TableHead, TableRow, Checkbox, FormControlLabel, Box, Paper
+  CircularProgress, Table, TableBody, TableCell, TableHead, TableRow, Checkbox, FormControlLabel, Box, Paper,Autocomplete, MenuItem, Select
 } from '@mui/material';
 import dayjs from 'dayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
@@ -21,19 +21,29 @@ export default function MantenimientoWizard() {
   const [listas, setListas] = useState([]);
   const [canalesDisponibles, setCanalesDisponibles] = useState([]);
   const [listasDisponibles, setListasDisponibles] = useState([]);
-  const [descuentoPara, setDescuentoPara] = useState('');
+  const [proveedores, setProveedores] = useState([]);
+  const [laboratorios, setLaboratorios] = useState([]);
+  const [descuentoPara, setDescuentoPara] = useState('Proveedor');
+  const [proveedorSeleccionado, setProveedorSeleccionado] = useState('');
+  const [laboratorioSeleccionado, setLaboratorioSeleccionado] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [canalesRes, listasRes] = await Promise.all([
+        const filtroInicial = 'AT';
+          const filtroInicial2 = 'LA';
+        const [canalesRes, listasRes, proveedoresRes, laboratoriosRes] = await Promise.all([
           axios.get('https://localhost:7146/api/Descuento/canales'),
-          axios.get('https://localhost:7146/api/Descuento/listas-precios')
+          axios.get('https://localhost:7146/api/Descuento/listas-precios'),
+          axios.get(`https://localhost:7146/api/Descuento/buscarprove?filtro=${filtroInicial2}`),
+          axios.get(`https://localhost:7146/api/Descuento/buscarlaborat?filtro=${filtroInicial}`)
         ]);
-        setCanalesDisponibles(canalesRes.data.sort((a, b) => a.descripcion.localeCompare(b.descripcion)));
-        setListasDisponibles(listasRes.data.sort((a, b) => a.descripcion.localeCompare(b.descripcion)));
+        setCanalesDisponibles(canalesRes.data);
+        setListasDisponibles(listasRes.data);
+        setProveedores(proveedoresRes.data);
+        setLaboratorios(laboratoriosRes.data);
       } catch (err) {
         console.error('Error cargando datos:', err);
       } finally {
@@ -42,6 +52,7 @@ export default function MantenimientoWizard() {
     };
     fetchData();
   }, []);
+
 
   const toggleCanal = (id) => {
     setCanales(prev => prev.includes(id)
@@ -99,7 +110,62 @@ export default function MantenimientoWizard() {
                 <FormControlLabel value="Proveedor" control={<Radio />} label="Proveedor" />
                 <FormControlLabel value="Laboratorio" control={<Radio />} label="Laboratorio" />
               </RadioGroup>
-            </Grid>
+                 {descuentoPara === 'Proveedor' && (
+  <>
+    <FormLabel component="legend" sx={{ mt: 2 }}>Proveedor</FormLabel>
+    <Autocomplete
+      options={proveedores}
+      getOptionLabel={(option) => `${option.ruc || ''} - ${option.razonSocial || ''}`}
+      value={proveedorSeleccionado}
+      onChange={(e, newValue) => setProveedorSeleccionado(newValue)}
+      onInputChange={async (e, value) => {
+        if (value && value.length >= 3) {
+          try {
+            const res = await axios.get(`https://localhost:7146/api/Descuento/buscarprove?filtro=${value}`);
+            setProveedores(res.data);
+          } catch (err) {
+            console.error('Error cargando proveedores:', err);
+          }
+        }
+      }}
+      renderInput={(params) => (
+        <TextField {...params} label="Seleccionar Proveedor" variant="outlined" sx={{ mt: 1 }} fullWidth />
+      )}
+      freeSolo
+    />
+  </>
+)}
+
+{descuentoPara === 'Laboratorio' && (
+  <>
+    <FormLabel component="legend" sx={{ mt: 2 }}>Laboratorio</FormLabel>
+    <Autocomplete
+      options={laboratorios}
+      getOptionLabel={(option) => option.descripcion || ''}
+      value={laboratorioSeleccionado}
+      onChange={(e, newValue) => setLaboratorioSeleccionado(newValue)}
+      onInputChange={async (e, value) => {
+        if (value && value.length >= 3) {
+          try {
+            const res = await axios.get(`https://localhost:7146/api/Descuento/buscarlaborat?filtro=${value}`);
+            setLaboratorios(res.data);
+          } catch (err) {
+            console.error('Error cargando laboratorios:', err);
+          }
+        }
+      }}
+      renderInput={(params) => (
+        <TextField {...params} label="Seleccionar Laboratorio" variant="outlined" sx={{ mt: 1 }} fullWidth />
+      )}
+      freeSolo
+    />
+  </>
+)}
+
+         
+          </Grid>
+      
+            
 
             <Grid item xs={12} md={3}>
               <Typography variant="subtitle1">Canales de Venta</Typography>
