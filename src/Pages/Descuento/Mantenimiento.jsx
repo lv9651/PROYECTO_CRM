@@ -9,7 +9,7 @@ import dayjs from 'dayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import axios from 'axios';
-
+import ConfigurarDescuentos from '../Descuento/ConfigurarDescuentos';
 const pasos = ['Seleccionar Atributos', 'Configurar Descuentos', 'Guardar Cambios'];
 
 export default function MantenimientoWizard() {
@@ -226,6 +226,17 @@ export default function MantenimientoWizard() {
             </Grid>
           </Grid>
         )}
+        {step === 1 && (
+  <ConfigurarDescuentos    descripcion={descripcion}
+    fechaInicio={fechaInicio}
+    fechaFin={fechaFin}
+    canales={canales}
+    listas={listas}
+    descuentoPara={descuentoPara}
+    proveedorSeleccionado={proveedorSeleccionado}
+    laboratorioSeleccionado={laboratorioSeleccionado} />
+)}
+
 
         <div className="mt-6 flex justify-between">
           <Button disabled={step === 0} onClick={handleBack}>Atrás</Button>
