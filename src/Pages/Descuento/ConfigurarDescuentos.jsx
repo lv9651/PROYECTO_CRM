@@ -5,7 +5,7 @@ import {
   Paper, Checkbox, CircularProgress, Select, MenuItem, FormControl, InputLabel
 } from '@mui/material';
 import axios from 'axios';
-
+import { Snackbar, Alert } from '@mui/material';
 export default function ConfigurarDescuentos({
   descripcion,
   fechaInicio,
@@ -14,9 +14,12 @@ export default function ConfigurarDescuentos({
   listas,
   descuentoPara,
   proveedorSeleccionado,
-  laboratorioSeleccionado
+  laboratorioSeleccionado,  onDatosCambio
 }){
   
+  const [mensajeAlerta, setMensajeAlerta] = useState('');
+const [openAlerta, setOpenAlerta] = useState(false);
+
    const [openModalProducto, setOpenModalProducto] = useState(false);
   const [openModalLaboratorio, setOpenModalLaboratorio] = useState(false);
   const [porcentajeQFLab, setPorcentajeQFLab] = useState('');
@@ -33,6 +36,7 @@ const [tipoProducto, setTipoProducto] = useState('IS');
   const debounceTimeout = useRef(null);
   const [descuentosAplicadoss, setDescuentosAplicadoss] = useState([]);
 const [productosSeleccionados, setProductosSeleccionados] = useState([]);
+const productosMarcados = [...productosLaboratorio, ...productosSeleccionados];
 
   const handleOpenLabModal = () => {
     setOpenModalLaboratorio(true);
@@ -117,7 +121,7 @@ useEffect(() => {
     setProductosLaboratorio(productosSeleccionados);  // Reflect selected products
     handleCloseProductoModal();
   };
-
+  
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -125,35 +129,45 @@ useEffect(() => {
     if (debounceTimeout.current) clearTimeout(debounceTimeout.current);
     debounceTimeout.current = setTimeout(() => fetchLaboratorios(value), 500);
   };
-
-
-
+ 
 // Función para manejar la selección de un producto y enviar la solicitud a la API
-const handleSeleccionarProducto = async (producto) => {
-  // Verificamos que haya un idProducto o id y que haya listas seleccionadas
-    console.log(producto);
-  const productoId = producto.idproducto || producto.id; // Primero intentamos con idProducto, si no, usamos id
+  const handleSeleccionarProducto = async (producto) => {
+    const productoId = producto.idproducto || producto.id;
+    if (!productoId || listas.length === 0) return;
 
-  if (!productoId || listas.length === 0) return;
+    try {
+      const response = await axios.post('https://localhost:7146/api/Descuento/obtener-precios', {
+        idProducto: productoId,
+        listas: listas.join('|'),
+      });
 
-  try {
-    // Hacer la llamada a la API para obtener descuentos aplicados
-    const response = await axios.post('https://localhost:7146/api/Descuento/obtener-precios', {
-      idProducto: productoId,  // Enviamos el idProducto o id
-      listas: listas.join('|') // Concatenamos las listas seleccionadas
-    });
+      if (response.data && response.data.length > 0) {
+        const qf = parseFloat(porcentajeQFLab) || 0;
+        const prov = parseFloat(porcentajeProvLab) || 0;
 
-    // Comprobamos si la API devuelve descuentos
-    if (response.data && response.data.length > 0) {
-      setDescuentosAplicadoss(prevDescuentos => [
-        ...prevDescuentos,
-        ...response.data
-      ]);
+        const nuevos = response.data.map(item => {
+          const totalDescuento = qf + prov;
+          const precio = parseFloat(item.precio) || 0;
+          const precioFinal = precio - (precio * (totalDescuento / 100));
+
+          return {
+            ...item,
+            qf,
+            prov,
+            total: precioFinal.toFixed(2)
+          };
+        });
+
+        setDescuentosAplicadoss(nuevos);
+      }
+    } catch (error) {
+      console.error("Error al obtener descuentos:", error);
     }
-  } catch (error) {
-    console.error("Error al obtener descuentos:", error);
-  }
-};
+  };
+
+  // Aquí el useEffect para ejecutar la llamada al API cuando cambian los productos
+
+
   const fetchProductosPorLaboratorio = async (labId) => {
     try {
       const res = await axios.post('https://localhost:7146/api/Descuento/listarLabor', {
@@ -176,15 +190,44 @@ const handleSeleccionarProducto = async (producto) => {
     setProductosLaboratorio(todos);
     handleCloseLabModal();
   };
-  const handleProductoSeleccionado = (prod) => {
-    setProductosSeleccionados((prevSeleccionados) => {
-      if (prevSeleccionados.some(p => p.codigo === prod.codigo)) {
-        return prevSeleccionados.filter(p => p.codigo !== prod.codigo);
-      } else {
-        return [...prevSeleccionados, prod];
+
+  const handleCambioPorcentaje = (codigo, campo, valor) => {
+  setDescuentosAplicadoss(prev =>
+    prev.map(item => {
+      if (item.codigo === codigo) {
+        const nuevoValor = parseFloat(valor) || 0;
+        const nuevoQf = campo === 'qf' ? nuevoValor : item.qf || 0;
+        const nuevoProv = campo === 'prov' ? nuevoValor : item.prov || 0;
+        const totalDescuento = nuevoQf + nuevoProv;
+        const precio = parseFloat(item.precio) || 0;
+        const precioFinal = precio - (precio * (totalDescuento / 100));
+
+        return {
+          ...item,
+          qf: nuevoQf,
+          prov: nuevoProv,
+          total: precioFinal.toFixed(2)
+        };
       }
-    });
-  };
+      return item;
+    })
+  );
+};
+
+
+
+ const handleProductoSeleccionado = (prod) => {
+  const yaExiste = productosSeleccionados.some(p => p.codigo === prod.codigo) ||
+                   productosLaboratorio.some(p => p.codigoproducto === prod.codigo);
+
+  if (yaExiste) {
+    setMensajeAlerta(`El producto "${prod.producto}" ya está en la lista de seleccionados`);
+    setOpenAlerta(true);
+    return; // No lo agrega de nuevo
+  }
+
+  setProductosSeleccionados(prev => [...prev, prod]);
+};
   const productosFinal = productosLaboratorio;
 
   const descuentosAplicados = []; // Luego puedes calcular los descuentos
@@ -193,6 +236,66 @@ const handleSeleccionarProducto = async (producto) => {
     updatedProductos[index].tipoProducto = e.target.value;  // Actualiza el tipo del producto
     setProductosLaboratorio(updatedProductos);
   };
+  
+   useEffect(() => {
+    const todosProductos = [...productosFinal, ...productosSeleccionados];
+    todosProductos.forEach(prod => {
+      handleSeleccionarProducto(prod);
+    });
+  }, [productosFinal, productosSeleccionados]);
+
+  const productosConLista = [...productosFinal, ...productosSeleccionados].map(prod => {
+    const descuento = descuentosAplicadoss.find(desc =>
+      desc.codigo === prod.codigo || desc.idproducto === prod.idproducto || desc.id === prod.id
+    );
+
+    return {
+      ...prod,
+      lista: descuento?.lista || 'hola',
+           PVV: descuento?.precio || 'hola',
+      precio: descuento?.precio || null,
+      total: descuento?.total || null,
+   descq: descuento?.qf || null ,
+      descprov:descuento?.prov || null
+    };
+  });
+
+  useEffect(() => {
+    const datosParaEnviar = {
+      productosSeleccionados: productosConLista,
+      porcentajeQFLab,
+      porcentajeProvLab,
+      selectedLabs,
+      tipoProducto,
+      searchTerm,
+      descripcion,
+      fechaInicio,
+      fechaFin,
+      canales,
+      listas,
+      descuentoPara,
+      proveedorSeleccionado,
+      laboratorioSeleccionado,
+    };
+
+    console.log('Datos enviados a wizard:', datosParaEnviar);
+    onDatosCambio(datosParaEnviar);
+  }, [
+    productosConLista,
+    porcentajeQFLab,
+    porcentajeProvLab,
+    selectedLabs,
+    tipoProducto,
+    searchTerm,
+    descripcion,
+    fechaInicio,
+    fechaFin,
+    canales,
+    listas,
+    descuentoPara,
+    proveedorSeleccionado,
+    laboratorioSeleccionado,
+  ]);
   return (
       <>
       <Grid container spacing={2} sx={{ mt: 3 }}>
@@ -313,43 +416,42 @@ const handleSeleccionarProducto = async (producto) => {
     >
       <Box sx={{ minWidth: 800 }}>
   <Table size="small" stickyHeader>
-    <TableHead>
-      <TableRow>
-        <TableCell>TIPO</TableCell>
-        <TableCell>Cód</TableCell>
-        <TableCell>Producto</TableCell>
-        <TableCell>Laboratorio</TableCell>
-        <TableCell>Cantidad</TableCell>
-        <TableCell>VVF</TableCell>
-      </TableRow>
-    </TableHead>
-    <TableBody>
-      {/* Combina productosFinal y productosSeleccionados */}
-      {[...productosFinal, ...productosSeleccionados].map((prod, idx) => (
-         <TableRow key={idx} onClick={() => handleSeleccionarProducto(prod)}>
-          <TableCell>
-            <FormControl fullWidth variant="outlined" size="small">
-              <InputLabel>Tipo</InputLabel>
-              <Select
-                value={prod.tipoSeleccionado || 'Primario'}
-                onChange={(e) => handleTipoChange(e, idx)}
-                label="Tipo"
-              >
-                <MenuItem value="Primario">Primario</MenuItem>
-                <MenuItem value="Secundario" disabled>Secundario</MenuItem>
-              </Select>
-            </FormControl>
-          </TableCell>
-          
-          {/* Usar `codigoproducto` para productosFinal y `codigo` para productosSeleccionados */}
-          <TableCell>{prod.codigoproducto || prod.codigo}</TableCell>
-          <TableCell>{prod.producto}</TableCell>
-          <TableCell>{prod.laboratorio}</TableCell>
-          <TableCell>{1}</TableCell> {/* Cantidad está fija en 1, puedes cambiarla si es necesario */}
-          <TableCell>{prod.vvf || '0'}</TableCell> {/* Si no hay "vvf", mostrar "N/A" */}
-        </TableRow>
-      ))}
-    </TableBody>
+  <TableHead>
+  <TableRow>
+    <TableCell>TIPO</TableCell>
+    <TableCell>Cód</TableCell>
+    <TableCell>Producto</TableCell>
+    <TableCell>Laboratorio</TableCell>
+    <TableCell>Cantidad</TableCell>
+    <TableCell>VVF</TableCell>
+    <TableCell>Canal de Lista</TableCell> {/* Nueva columna */}
+  </TableRow>
+</TableHead>
+   <TableBody>
+  {productosConLista.map((prod, idx) => (
+<TableRow key={idx} onClick={() => handleSeleccionarProducto(prod)}>
+      <TableCell>
+        <FormControl fullWidth variant="outlined" size="small">
+          <InputLabel>Tipo</InputLabel>
+          <Select
+            value={prod.tipoSeleccionado || 'Primario'}
+            onChange={(e) => handleTipoChange(e, idx)}
+            label="Tipo"
+          >
+            <MenuItem value="Primario">Primario</MenuItem>
+            <MenuItem value="Secundario" disabled>Secundario</MenuItem>
+          </Select>
+        </FormControl>
+      </TableCell>
+      <TableCell>{prod.codigoproducto || prod.codigo}</TableCell>
+      <TableCell>{prod.producto}</TableCell>
+      <TableCell>{prod.laboratorio}</TableCell>
+      <TableCell>{1}</TableCell>
+      <TableCell>{prod.vvf || '0'}</TableCell>
+      <TableCell>{prod.lista}</TableCell> {/* ✅ Aquí aparece la lista del API */}
+    </TableRow>
+  ))}
+</TableBody>
   </Table>
 </Box>
     </Paper>
@@ -382,8 +484,24 @@ const handleSeleccionarProducto = async (producto) => {
               <TableRow key={idx}>
                 <TableCell>{desc.lista}</TableCell>
                 <TableCell>{desc.precio}</TableCell>
-                <TableCell>{desc.qf}%</TableCell>
-                <TableCell>{desc.prov}%</TableCell>
+            <TableCell>
+  <TextField
+    type="number"
+    value={desc.qf}
+    onChange={(e) => handleCambioPorcentaje(desc.codigo, 'qf', e.target.value)}
+    size="small"
+    inputProps={{ min: 0 }}
+  />
+</TableCell>
+              <TableCell>
+  <TextField
+    type="number"
+    value={desc.prov}
+    onChange={(e) => handleCambioPorcentaje(desc.codigo, 'prov', e.target.value)}
+    size="small"
+    inputProps={{ min: 0 }}
+  />
+</TableCell>
                 <TableCell>{desc.total}</TableCell>
               </TableRow>
             ))}
@@ -449,6 +567,16 @@ const handleSeleccionarProducto = async (producto) => {
           </Box>
         </Box>
       </Modal>
+      <Snackbar
+  open={openAlerta}
+  autoHideDuration={3000}
+  onClose={() => setOpenAlerta(false)}
+  anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+>
+  <Alert severity="warning" onClose={() => setOpenAlerta(false)}>
+    {mensajeAlerta}
+  </Alert>
+</Snackbar>
     </>
   );
 }
