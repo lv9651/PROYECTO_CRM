@@ -11,6 +11,7 @@ import {
 // IMPORTA TU COMPONENTE FUNCIONAL REAL
 import ListarDescuento from './ListarDescuento';
 import Mantenimiento from './Mantenimiento';
+import PackPromociones from './PackPromocionesModule';
 
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   '&.Mui-selected, &.Mui-selected:hover': {
@@ -32,7 +33,7 @@ const descuentoMenu = [
       { name: "Listar", icon: <FormatListBulleted />, tipo: "Vista", component: <ListarDescuento /> },
       { name: "Mantenimiento", icon: <Build />, tipo: "Vista", component: <Mantenimiento />},
       { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },
-      { name: "Pack de promociones", icon: <ShoppingCart />, tipo: "Vista", component: <div>Pack de promociones</div> },
+      { name: "Pack de promociones", icon: <ShoppingCart />, tipo: "Vista", component:  <PackPromociones />  },
       { name: "Productos Obsequio", icon: <CardGiftcard />, tipo: "Vista", component: <div>Productos Obsequio</div> }
     ]
   }

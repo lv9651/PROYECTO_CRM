@@ -1,4 +1,3 @@
-// MantenimientoWizard.jsx
 import React, { useState, useEffect } from 'react';
 import {
   Stepper, Step, StepLabel,
@@ -10,6 +9,7 @@ import dayjs from 'dayjs';
 import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import axios from 'axios';
+import { useAuth } from '../../Compo/AuthContext';
 
 import ConfigurarDescuentos from './ConfigurarDescuentos';
 import GuardarFinal from './GuardarFinal';
@@ -28,6 +28,7 @@ export default function MantenimientoWizard() {
   const [descuentoPara, setDescuentoPara] = useState('Proveedor');
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [laboratorioSeleccionado, setLaboratorioSeleccionado] = useState(null);
+  const { user } = useAuth();
 
   // Datos del paso 1: descuentos y productos configurados
   const [datosConfigurarDescuento, setDatosConfigurarDescuento] = useState({});
@@ -76,41 +77,34 @@ export default function MantenimientoWizard() {
   const toggleLista = (id) => {
     setListas(prev => prev.includes(id) ? prev.filter(l => l !== id) : [...prev, id]);
   };
-
-  const verificarDatosCompletos = () => {
-    if (!datosConfigurarDescuento) return false;
-    const tieneProductos = datosConfigurarDescuento.productosSeleccionados?.length > 0;
-    const tieneDescuentos = datosConfigurarDescuento.descuentosAplicadoss?.length > 0;
-    return tieneProductos && tieneDescuentos;
-  };
-
-
-  console.log('datosConfigurarDescuento lv:', datosConfigurarDescuento.productosSeleccionados);
+  console.log(datosCompletos);
 
   const handleNext = () => {
-      console.log("📦 Datos enviados desde ConfigurarDescuentos:", datosCompletos);
     if (step === 1) {
-   
       // Combinar paso 0 y paso 1 en datosCompletos
-   const listasConDescripcion = listasDisponibles
-  .filter(l => listas.includes(l.idListaPrecio))
-  .map(l => ({
-    idListaPrecio: l.idListaPrecio,
-    descripcion: l.descripcion
-  }));
-
-setDatosCompletos({
-  descripcion,
-  fechaInicio,
-  fechaFin,
-  canales,
-  listas: listasConDescripcion, // 👈 ahora con descripción
-  descuentoPara,
-  proveedorSeleccionado,
-  laboratorioSeleccionado,
-  ...datosConfigurarDescuento
+const listasConDescripcion = listas.map(id => {
+  const lista = listasDisponibles.find(l => l.idListaPrecio === Number(id));
+  return {
+    idListaPrecio: id,
+    descripcion: lista?.descripcion || ''
+  };
 });
+
+      setDatosCompletos({
+        descripcion,
+        fechaInicio: fechaInicio.toDate(),  // Convierte dayjs a Date
+        fechaFin: fechaFin.toDate(),
+        canales,
+        listass: listasConDescripcion,
+        descuentoPara,
+        proveedorSeleccionado,
+        laboratorioSeleccionado,
+        usuariomanipula: user?.emp_codigo || 0,
+        ...datosConfigurarDescuento
+        
+      });
     }
+    
     setStep(s => s + 1);
   };
 
@@ -261,22 +255,92 @@ setDatosCompletos({
             descuentoPara={descuentoPara}
             proveedorSeleccionado={proveedorSeleccionado}
             laboratorioSeleccionado={laboratorioSeleccionado}
-              listasDisponibles={listasDisponibles} 
-            onDatosCambio={setDatosConfigurarDescuento} // recibir datos de ConfigurarDescuentos
+            listasDisponibles={listasDisponibles}
+            onDatosCambio={setDatosConfigurarDescuento}
           />
         )}
 
         {step === 2 && (
-          <GuardarFinal datos={datosCompletos}
-            listasDisponibles={listasDisponibles} />
+          <GuardarFinal datos={datosCompletos} listasDisponibles={listasDisponibles} />
         )}
 
-        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between' }}>
-          <Button disabled={step === 0} onClick={handleBack}>Atrás</Button>
-          <Button variant="contained" onClick={handleNext}>
-            {step === pasos.length - 1 ? 'Finalizar' : 'Siguiente'}
-          </Button>
-        </div>
+   <div style={{ marginTop: 20, display: 'flex', justifyContent: 'space-between' }}>
+  <Button disabled={step === 0} onClick={handleBack}>Atrás</Button>
+  
+  {step === pasos.length - 1 ? (
+    <Button
+      variant="contained"
+      onClick={async () => {
+        try {
+          const formatearFecha = (fecha, finDelDia = false) => {
+            const date = dayjs(fecha);
+            return finDelDia
+              ? date.hour(23).minute(59).second(59).format('YYYY-MM-DDTHH:mm:ss')
+              : date.hour(0).minute(0).second(0).format('YYYY-MM-DDTHH:mm:ss');
+          };
+
+          const payload = {
+            iddescuento: 0,
+            descripcion: datosCompletos.descripcion,
+            fechainicio: formatearFecha(datosCompletos.fechaInicio),
+            fechafin: formatearFecha(datosCompletos.fechaFin, true),
+            idtipodescuento: 1,
+            todosucursal: false,
+            idsucursal: '',
+             idcanalventa: JSON.stringify(
+              datosCompletos.canales.map(id => {
+                const canal = canalesDisponibles.find(c => c.idCanalVenta === id);
+                return {
+                  idcanalventa: String(id),
+                  descripcion: canal?.descripcion || ''
+                };
+              })
+            ),
+            todolistaprecio: false,
+            idlistaprecio: JSON.stringify(
+              datosCompletos.listass.map(l => ({
+                idlistaprecio: String(l.idListaPrecio),
+                descripcion: l.descripcion || ''
+              }))
+            ),
+            todotipoproducto: false,
+            descuentotodotipoproducto: 0,
+            idtipoproducto: "",
+            excluiridproducto: "",
+            todoproducto: false,
+            descuentotodoproducto: 0,
+            idproducto: JSON.stringify(
+              (datosCompletos.productosSeleccionados || []).map(p => ({
+                idproducto: String(p.idproducto),
+                descripcion: p.producto,
+                descuentoqf: p.descq || 0,
+                descuentoprov: p.prov || 0
+              }))
+            ),
+            todocliente: false,
+            descuentotodocliente: 0,
+            idcliente: "",
+            idestado: 1,
+            usuariomanipula: datosCompletos.usuariomanipula || 0
+          };
+
+          console.log("📦 Enviando a API:", payload);
+console.log("🧪 Verificando listas en datosCompletos:", datosCompletos.listas);
+          await axios.post('https://localhost:7146/api/Descuento/Insertar-Descu', payload);
+          alert('✅ Descuento guardado correctamente');
+          setStep(0); // Opcional: reinicia el wizard
+        } catch (error) {
+          console.error('❌ Error al guardar:', error);
+          alert('Ocurrió un error al guardar los datos.');
+        }
+      }}
+    >
+      Finalizar
+    </Button>
+  ) : (
+    <Button variant="contained" onClick={handleNext}>Siguiente</Button>
+  )}
+</div>
       </div>
     </LocalizationProvider>
   );

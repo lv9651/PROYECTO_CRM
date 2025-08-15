@@ -20,6 +20,8 @@ import Descuento from './Pages/Descuento/DescuentoModule';
 import Cupon from './Pages/Cupon/CuponesEmpresa';
 import ListarDescuento from './Pages/Descuento/ListarDescuento';
 import Mantenimiento from './Pages/Descuento/Mantenimiento';
+import PackPromocionesModule from './Pages/Descuento/PackPromocionesModule';
+
 import { AuthProvider, useAuth } from './Compo/AuthContext';
 
 // Componente para rutas privadas
@@ -93,6 +95,10 @@ const AppRoutes = () => {
 } />
 <Route path="/descuento/Mantenimiento" element={
   <PrivateRoute><Mantenimiento /></PrivateRoute>
+} />
+
+<Route path="/descuento/pacKPromocionesModule" element={
+  <PrivateRoute><PackPromocionesModule /></PrivateRoute>
 } />
             <Route path="/Cupon" element={
             <PrivateRoute><Cupon /></PrivateRoute>

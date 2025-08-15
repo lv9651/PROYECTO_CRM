@@ -15,12 +15,15 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
     return <Typography>No hay datos para mostrar.</Typography>;
   }
 
+  // Mostrar el JSON completo y formateado para debug
+  const datosComoString = JSON.stringify(datos, null, 2);
+
   const {
     descripcion,
     fechaInicio,
     fechaFin,
     canales, // array de IDs
-    listas,  // array de IDs
+    listas,  // array de IDs o objetos con descripcion?
     descuentoPara,
     proveedorSeleccionado,
     laboratorioSeleccionado,
@@ -29,7 +32,6 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
     porcentajeProvLab,
   } = datos;
 
-  console.log(datos);
   // Obtener las descripciones de canales seleccionados:
   const canalesNombres = canales
     .map(id => {
@@ -39,10 +41,14 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
     .join(', ');
 
   // Obtener las descripciones de listas seleccionadas:
+  // Aquí revisa si listas es array de IDs o ya con descripciones (según tu estructura)
   const listasNombres = listas
-    .map(id => {
-      const lista = listasDisponibles.find(l => l.idListaPrecio === id);
-      return lista ? lista.descripcion : id;
+    .map(item => {
+      if (typeof item === 'object' && item.descripcion) {
+        return item.descripcion;
+      }
+      const lista = listasDisponibles.find(l => l.idListaPrecio === item);
+      return lista ? lista.descripcion : item;
     })
     .join(', ');
 
@@ -54,6 +60,11 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
 
   return (
     <Paper sx={{ padding: 3 }}>
+      <Typography variant="h6" gutterBottom>Datos completos recibidos (debug)</Typography>
+      <pre style={{ maxHeight: 300, overflow: 'auto', background: '#f0f0f0', padding: 10 }}>
+        {datosComoString}
+      </pre>
+
       <Typography variant="h5" gutterBottom>Resumen de Mantenimiento</Typography>
 
       <Typography><strong>Descripción:</strong> {descripcion}</Typography>
@@ -94,42 +105,39 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
           <TableRow>
             <TableCell>Tipo</TableCell>
             <TableCell>Código</TableCell>
-             <TableCell align="right">PC</TableCell>
-                <TableCell>Producto</TableCell>
+            <TableCell align="right">PC</TableCell>
+            <TableCell>Producto</TableCell>
             <TableCell>Lista</TableCell>
-                 <TableCell>Precio</TableCell>
-                   <TableCell>Dessucursal</TableCell>
-                     <TableCell>DesProveedor</TableCell>
-               <TableCell>Total</TableCell>
-           
+            <TableCell>Precio</TableCell>
+            <TableCell>Dessucursal</TableCell>
+            <TableCell>DesProveedor</TableCell>
+            <TableCell>Total</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {productosSeleccionados.map((prod) => (
-           <TableRow key={prod.idproducto}>
-  <TableCell>PRIMARIO</TableCell>
-  <TableCell>{prod.codigoproducto}</TableCell>
-  <TableCell align="right">{prod.vvf?.toFixed(2) ?? '0.00'}</TableCell>
-  <TableCell>{prod.producto.trim()}</TableCell>
-  <TableCell>{prod.lista}</TableCell>
-  <TableCell>{prod.PVV}</TableCell>
-  <TableCell>{prod.descq}</TableCell>
-  <TableCell>{prod.descprov}</TableCell>
-  <TableCell>
-    {(() => {
-      const precio = parseFloat(prod.PVV) || 0;
-      const qf = parseFloat(prod.descq) || 0;
-      const prov = parseFloat(prod.descprov) || 0;
-      const total = precio - (precio * ((qf + prov) / 100));
-      return total.toFixed(2);
-    })()}
-  </TableCell>
-</TableRow>
+            <TableRow key={prod.idproducto}>
+              <TableCell>PRIMARIO</TableCell>
+              <TableCell>{prod.codigoproducto}</TableCell>
+              <TableCell align="right">{prod.vvf?.toFixed(2) ?? '0.00'}</TableCell>
+              <TableCell>{prod.producto.trim()}</TableCell>
+              <TableCell>{prod.lista}</TableCell>
+              <TableCell>{prod.PVV}</TableCell>
+              <TableCell>{prod.descq}</TableCell>
+              <TableCell>{prod.descprov}</TableCell>
+              <TableCell>
+                {(() => {
+                  const precio = parseFloat(prod.PVV) || 0;
+                  const qf = parseFloat(prod.descq) || 0;
+                  const prov = parseFloat(prod.descprov) || 0;
+                  const total = precio - (precio * ((qf + prov) / 100));
+                  return total.toFixed(2);
+                })()}
+              </TableCell>
+            </TableRow>
           ))}
         </TableBody>
       </Table>
-
-
     </Paper>
   );
 }
