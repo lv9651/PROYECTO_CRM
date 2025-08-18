@@ -182,6 +182,72 @@ const handlePriceChange = (value) => {
   dispatch({ type: 'UPDATE_FIELD', field: 'descuento', value: parseFloat(nuevoDescuento.toFixed(2)) });
 };
 
+
+const loadPackData = useCallback((packData) => {
+  // Parsear los datos del pack
+  const productos = JSON.parse(packData.idproducto);
+  const sucursales = JSON.parse(packData.idsucursal);
+  const canales = JSON.parse(packData.idcanalventa);
+  const listasPrecio = JSON.parse(packData.idlistaprecio);
+
+  // Calcular el descuento basado en el summary
+  const descuentoPorcentaje = productos.summary.descuento * 100;
+
+  // Actualizar el estado del pack
+  dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'packName',
+    value: packData.descripcion
+  });
+  dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'fechaDesde',
+    value: packData.fechaInicio.split('T')[0]
+  });
+  dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'fechaHasta',
+    value: packData.fechaFin.split('T')[0]
+  });
+  dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'descuento',
+    value: descuentoPorcentaje
+  });
+  dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'price',
+    value: productos.summary.total
+  });
+    dispatch({
+    type: 'UPDATE_FIELD',
+    field: 'packCode',
+    value: packData.idProductoPack
+  });
+
+  // Actualizar productos
+  const productosFormateados = productos.items.map(item => ({
+    code: item.id,
+    name: item.name,
+    price: item.precio,
+    precioOriginal: item.precio,
+    precioXFraccion: 0, // Puedes ajustar esto si tienes datos de fracción
+    usarFraccion: false,
+    cantidad: item.cantidad,
+    incentivo: 0.00
+  }));
+  setProducts(productosFormateados);
+
+  // Actualizar sucursales, canales y listas de precio seleccionadas
+  setSelectedSucursales(sucursales.map(s => parseInt(s.idsucursal)));
+  setSelectedCanales(canales.map(c => parseInt(c.idcanalventa)));
+  setSelectedListasPrecio(listasPrecio.map(l => parseInt(l.idListaPrecio)));
+
+  // Cerrar el modal de historial
+  setShowHistorialModal(false);
+  setCurrentPackId(packData.idDescuento);
+}, []);
+
 const fetchListasPrecio = useCallback(async () => {
   try {
     const { data } = await axios.get('https://localhost:7146/api/Descuento/listas-precios');
@@ -649,6 +715,7 @@ const handleSave = async () => {
   loading={loadingHistorial}
   filtro={filtroHistorial}
   setFiltro={setFiltroHistorial}
+   onLoadPack={loadPackData}
 />
       {/* Modal de productos */}
       <ProductModal 
@@ -763,7 +830,7 @@ const ProductModal = ({ open, onClose, productSearch, setProductSearch, producto
     </DialogActions>
   </Dialog>
 );
-const HistorialModal = ({ open, onClose, packs, loading, filtro, setFiltro }) => (
+const HistorialModal = ({ open, onClose, packs, loading, filtro, setFiltro,onLoadPack  }) => (
   <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth>
     <DialogTitle>
       <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -811,17 +878,13 @@ const HistorialModal = ({ open, onClose, packs, loading, filtro, setFiltro }) =>
                     <TableCell>{new Date(pack.fechaFin).toLocaleDateString()}</TableCell>
          
                     <TableCell>
-                      <Button 
-                        variant="outlined" 
-                        size="small"
-                        onClick={() => {
-                          // Aquí puedes implementar la carga del pack seleccionado
-                          console.log('Cargar pack:', pack.IdDescuento);
-                          onClose();
-                        }}
-                      >
-                        Cargar
-                      </Button>
+                     <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => onLoadPack(pack)}
+              >
+                Cargar
+              </Button>
                     </TableCell>
                   </TableRow>
                 ))
