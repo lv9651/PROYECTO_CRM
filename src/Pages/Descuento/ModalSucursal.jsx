@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
-
+import { BASE_URL } from '../../Conf/config';
 const ModalSucursal = ({ open, onClose, descuento }) => {
   const { user } = useAuth();
   const [sucursales, setSucursales] = useState([]);
@@ -16,7 +16,7 @@ const ModalSucursal = ({ open, onClose, descuento }) => {
   useEffect(() => {
     if (open && descuento?.idDescuento) {
       axios
-        .get(`https://localhost:7146/api/descuento/obtener-sucursales-descuento/${descuento.idDescuento}`)
+        .get(`${BASE_URL}/api/descuento/obtener-sucursales-descuento/${descuento.idDescuento}`)
         .then(res => {
           const data = res.data || [];
           setSucursales(data);
@@ -50,7 +50,7 @@ const ModalSucursal = ({ open, onClose, descuento }) => {
       };
 
       const response = await axios.post(
-        'https://localhost:7146/api/descuento/asignar-sucursales',
+        `${BASE_URL}/api/descuento/asignar-sucursales`,
         payload
       );
 

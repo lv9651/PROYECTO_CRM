@@ -9,7 +9,7 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import axios from 'axios';
 import { Snackbar, Alert } from '@mui/material';
-
+import { BASE_URL } from '../../Conf/config';
 // Componente para el modal de productos
 const ProductosModal = React.memo(({ 
   open, 
@@ -296,7 +296,7 @@ const getDescuentosProducto = useCallback((producto) => {
     setLoading(prev => ({ ...prev, descuentos: true }));
     
     try {
-      const response = await axios.post('https://localhost:7146/api/Descuento/obtener-precios', {
+      const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
         idProducto: productoId,
         listas: listas.join('|'),
       });
@@ -577,7 +577,7 @@ const handlePorcentajeProvChange = useCallback((e) => {
   const fetchLaboratorios = useCallback(async (filtro) => {
     setLoading(prev => ({ ...prev, laboratorios: true }));
     try {
-      const res = await axios.get(`https://localhost:7146/api/Descuento/buscarlaborat?filtro=${encodeURIComponent(filtro)}`);
+      const res = await axios.get(`${BASE_URL}/api/Descuento/buscarlaborat?filtro=${encodeURIComponent(filtro)}`);
       setLaboratorios(res.data);
     } catch (error) {
       setMensajeAlerta(`Error al cargar laboratorios: ${error.message}`);
@@ -591,7 +591,7 @@ const handlePorcentajeProvChange = useCallback((e) => {
   const fetchProductos = useCallback(async () => {
     setLoading(prev => ({ ...prev, productos: true }));
     try {
-      const response = await axios.get('https://localhost:7146/api/Descuento/buscarproducto', {
+      const response = await axios.get(`${BASE_URL}/api/Descuento/buscarproducto`, {
         params: {
           codigoproducto: '',
           nombreproducto: searchTerm,
@@ -650,7 +650,7 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
 
   // Cargar precios
   try {
-    const response = await axios.post('https://localhost:7146/api/Descuento/obtener-precios', {
+    const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
       idProducto: productoId,
       listas: listas.join('|'),
     });
@@ -688,7 +688,7 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
 
   const fetchProductosPorLaboratorio = useCallback(async (labId) => {
     try {
-      const res = await axios.post('https://localhost:7146/api/Descuento/listarLabor', {
+      const res = await axios.post(`${BASE_URL}/api/Descuento/listarLabor`, {
         laboratorio: labId,
         producto: '',
         top: 200
@@ -719,7 +719,7 @@ const handleGuardarLab = useCallback(async () => {
       // 2. Verificar cada producto del laboratorio
       for (const producto of productosLab) {
         try {
-          const response = await axios.post('https://localhost:7146/api/Descuento/obtener-precios', {
+          const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
             idProducto: producto.idproducto || producto.id || producto.codigo,
             listas: listas.join('|'),
      

@@ -19,12 +19,20 @@ export const AuthProvider = ({ children }) => {
       token: userData.token,
       username: userData.username,
       perfilCodigo: userData.perfilCodigo,
-      emp_codigo:userData.emp_codigo,
-      nombre:userData.nombre
+      emp_codigo: userData.emp_codigo,
+      nombre: userData.nombre,
+      modulos: userData.modulos || [],   // 🔹 Guardamos módulos aquí
     };
+
     localStorage.setItem('userData', JSON.stringify(userWithProfile));
     setUser(userWithProfile);
-    navigate('/dashboard');
+
+    // 🔹 Si tiene módulos, redirige al primero, si no, al dashboard
+    if (userWithProfile.modulos.length > 0) {
+      navigate(userWithProfile.modulos[0].path);
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const logout = () => {

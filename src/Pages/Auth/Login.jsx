@@ -50,6 +50,7 @@ const Login = () => {
         perfilCodigo: data.perfilCodigo,
         emp_codigo: data.emp_codigo,
         nombre: data.nombre,
+       modulos: data.modulos || []
       });
 
     } catch (err) {

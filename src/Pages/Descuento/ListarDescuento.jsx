@@ -6,7 +6,7 @@ import {
 } from '@mui/material';
 import { Visibility, Store } from '@mui/icons-material';
 import ModalSucursal from './ModalSucursal'; // Asegúrate de ajustar la ruta según tu estructura
-
+import { BASE_URL } from '../../Conf/config';
 const ListarDescuento = () => {
   const [descuentos, setDescuentos] = useState([]);
   const [descripcion, setDescripcion] = useState('');
@@ -21,7 +21,7 @@ const ListarDescuento = () => {
         fechainicio: fechaInicio || ''
       };
 
-      const response = await axios.get('https://localhost:7146/api/descuento/listar', { params });
+      const response = await axios.get(`${BASE_URL}/api/descuento/listar`, { params });
       setDescuentos(response.data);
     } catch (error) {
       console.error('Error al obtener los descuentos:', error);

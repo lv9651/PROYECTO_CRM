@@ -10,7 +10,7 @@ import { DatePicker, LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
-
+import { BASE_URL } from '../../Conf/config';
 import ConfigurarDescuentos from './ConfigurarDescuentos';
 import GuardarFinal from './GuardarFinal';
 
@@ -51,10 +51,10 @@ export default function MantenimientoWizard() {
         const filtroInicial2 = 'LA';
 
         const [canalesRes, listasRes, proveedoresRes, laboratoriosRes] = await Promise.all([
-          axios.get('https://localhost:7146/api/Descuento/canales'),
-          axios.get('https://localhost:7146/api/Descuento/listas-precios'),
-          axios.get(`https://localhost:7146/api/Descuento/buscarprove?filtro=${filtroInicial2}`),
-          axios.get(`https://localhost:7146/api/Descuento/buscarlaborat?filtro=${filtroInicial}`),
+          axios.get(`${BASE_URL}/api/Descuento/canales`),
+          axios.get(`${BASE_URL}/api/Descuento/listas-precios`),
+          axios.get(`${BASE_URL}/api/Descuento/buscarprove?filtro=${filtroInicial2}`),
+          axios.get(`${BASE_URL}/api/Descuento/buscarlaborat?filtro=${filtroInicial}`),
         ]);
 
         setCanalesDisponibles(canalesRes.data);
@@ -326,7 +326,7 @@ const listasConDescripcion = listas.map(id => {
 
           console.log("📦 Enviando a API:", payload);
 console.log("🧪 Verificando listas en datosCompletos:", datosCompletos.listas);
-          await axios.post('https://localhost:7146/api/Descuento/Insertar-Descu', payload);
+          await axios.post(`${BASE_URL}/api/Descuento/Insertar-Descu`, payload);
           alert('✅ Descuento guardado correctamente');
           setStep(0); // Opcional: reinicia el wizard
         } catch (error) {

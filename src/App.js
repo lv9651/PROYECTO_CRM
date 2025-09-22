@@ -21,6 +21,8 @@ import Cupon from './Pages/Cupon/CuponesEmpresa';
 import ListarDescuento from './Pages/Descuento/ListarDescuento';
 import Mantenimiento from './Pages/Descuento/Mantenimiento';
 import PackPromocionesModule from './Pages/Descuento/PackPromocionesModule';
+import PagoMedico from './Pages/PagoMedico/PagoMedico';
+
 
 import { AuthProvider, useAuth } from './Compo/AuthContext';
 
@@ -76,6 +78,10 @@ const AppRoutes = () => {
           } />
              <Route path="/Cuota" element={
             <PrivateRoute><Cuota /></PrivateRoute>
+          } />
+
+           <Route path="/PagoMedico" element={
+            <PrivateRoute><PagoMedico /></PrivateRoute>
           } />
 
    <Route path="/RegistroRH" element={
