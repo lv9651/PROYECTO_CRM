@@ -22,6 +22,7 @@ const moduleConfig = {
   '/Cuota': { icon: <AttachMoney fontSize="large" />, color: '#799e2e', title: 'Cuota' },
   '/Cupon': { icon: <CreditCard fontSize="large" />, color: '#00665b', title: 'Cupón' }
   ,'/PagoMedico': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'PagoMedico'}
+   ,'/ClubQFModule': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'ClubQFModule'}
 };
 
 const Dashboard = () => {

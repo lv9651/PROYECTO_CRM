@@ -9,6 +9,7 @@ import { AddCircle, Search, Close } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
 import History from '@mui/icons-material/History';
+import { BASE_URL } from "../../Conf/config";
 // Reducer para manejar el estado del pack
 const packReducer = (state, action) => {
   switch (action.type) {
@@ -81,7 +82,7 @@ const [filtroHistorial, setFiltroHistorial] = useState('');
   const fetchSucursales = useCallback(async () => {
     setLoading(prev => ({...prev, sucursales: true}));
     try {
-      const { data } = await axios.get('https://localhost:7146/api/Descuento/sucursalQF');
+      const { data } = await axios.get(`${BASE_URL}/api/Descuento/sucursalQF`);
       setSucursalesApi(data);
     } catch (e) {
       console.error('Error al cargar las sucursales:', e);
@@ -93,7 +94,7 @@ const [filtroHistorial, setFiltroHistorial] = useState('');
   const fetchCanales = useCallback(async () => {
     setLoading(prev => ({...prev, canales: true}));
     try {
-      const { data } = await axios.get('https://localhost:7146/api/Descuento/canales');
+      const { data } = await axios.get(`${BASE_URL}/api/Descuento/canales`);
       setCanalesApi(data);
     } catch (e) {
       console.error('Error al cargar los canales de venta:', e);
@@ -111,7 +112,7 @@ const [filtroHistorial, setFiltroHistorial] = useState('');
     setLoading(prev => ({...prev, productos: true}));
     try {
       const { data } = await axios.get(
-        `https://localhost:7146/api/Descuento/BuscarPorNombrepack/${nombreProducto}`
+        `${BASE_URL}/api/Descuento/BuscarPorNombrepack/${nombreProducto}`
       );
       setProductosApi(data);
     } catch (e) {
@@ -130,7 +131,7 @@ const [filtroHistorial, setFiltroHistorial] = useState('');
   const fetchHistorialPacks = useCallback(async () => {
   setLoadingHistorial(true);
   try {
-    const { data } = await axios.get('https://localhost:7146/api/Descuento/HistorialPacks');
+    const { data } = await axios.get(`${BASE_URL}/api/Descuento/HistorialPacks`);
     setHistorialPacks(data);
   } catch (e) {
     console.error('Error al cargar el historial:', e);
@@ -231,8 +232,8 @@ const loadPackData = useCallback((packData) => {
     name: item.name,
     price: item.precio,
     precioOriginal: item.precio,
-    precioXFraccion: 0, // Puedes ajustar esto si tienes datos de fracción
-    usarFraccion: false,
+   precioXFraccion: item.precioXFraccion || item.precio,// Puedes ajustar esto si tienes datos de fracción
+      usarFraccion: Boolean(item.usarFraccion),
     cantidad: item.cantidad,
     incentivo: 0.00
   }));
@@ -250,7 +251,7 @@ const loadPackData = useCallback((packData) => {
 
 const fetchListasPrecio = useCallback(async () => {
   try {
-    const { data } = await axios.get('https://localhost:7146/api/Descuento/listas-precios');
+    const { data } = await axios.get(`${BASE_URL}/api/Descuento/listas-precios`);
     setListasPrecioApi(data);
   } catch (e) {
     console.error('Error al cargar las listas de precios:', e);
@@ -374,8 +375,11 @@ const handleSave = async () => {
           id: p.code,
           name: p.name,
           precio: p.usarFraccion ? p.precioXFraccion : p.precioOriginal,
+            usarFraccion: p.usarFraccion, 
           cantidad: p.cantidad,
-          total: (p.usarFraccion ? p.precioXFraccion : p.precioOriginal) * p.cantidad
+          total: (p.usarFraccion ? p.precioXFraccion : p.precioOriginal) * p.cantidad,
+
+
         })),
         summary: {
           subtotal: calcularPrecioBase(),
@@ -399,7 +403,7 @@ const handleSave = async () => {
       throw new Error("El descuento debe ser un valor numérico válido");
     }
 
-    const response = await axios.post('https://localhost:7146/api/Descuento/Insertar-Descu', requestData, {
+    const response = await axios.post(`${BASE_URL}/api/Descuento/Insertar-Descu`, requestData, {
       headers: {
         'Content-Type': 'application/json',
         // Agrega aquí tu header de autenticación si es necesario

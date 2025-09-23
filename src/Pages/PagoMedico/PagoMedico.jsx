@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import axios from "axios";
-
+import { BASE_URL } from '../../Conf/config';
 const PagoMedico = () => {
   const [data, setData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -37,7 +37,7 @@ const PagoMedico = () => {
     setLoading(true);
     axios
       .get(
-        `https://localhost:7146/api/Contabilidad_Convenio/Pago-Agrupadas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`
+        `${BASE_URL}/api/Contabilidad_Convenio/Pago-Agrupadas?fechaInicio=${fechaInicio}&fechaFin=${fechaFin}`
       )
       .then((res) => {
         setData(res.data);
