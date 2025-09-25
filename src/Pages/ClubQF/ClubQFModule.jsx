@@ -32,9 +32,12 @@ const ClubQFModule = () => {
     minCompra: 0,
     maxCompra: null,
     descuento: 0.0,
-    beneficios: "",
+    beneficios: [],
     productos: [],
   });
+
+  const [busquedaProducto, setBusquedaProducto] = useState("");
+  const [productosDisponibles, setProductosDisponibles] = useState([]);
 
   // 🔹 Listar niveles
   const fetchNiveles = async () => {
@@ -54,12 +57,36 @@ const ClubQFModule = () => {
   const handleOpen = (item = null) => {
     if (item) {
       let productosParsed = [];
+      let beneficiosParsed = [];
+
+      // Parse productos
       try {
-        productosParsed = JSON.parse(item.productos || "[]");
+        const parsedProd = JSON.parse(item.productos || "[]");
+        productosParsed = Array.isArray(parsedProd) ? parsedProd : [];
       } catch {
         productosParsed = [];
       }
-      setNivel({ ...item, productos: productosParsed });
+
+      // Parse beneficios
+      try {
+        const parsedBen = JSON.parse(item.beneficios || "[]");
+        beneficiosParsed = Array.isArray(parsedBen) ? parsedBen : [];
+      } catch {
+        if (typeof item.beneficios === "string") {
+          beneficiosParsed = item.beneficios.split(";").map((b) => ({
+            descripcion: b.trim(),
+            puntaje: 0,
+          }));
+        } else {
+          beneficiosParsed = [];
+        }
+      }
+
+      setNivel({
+        ...item,
+        productos: productosParsed,
+        beneficios: beneficiosParsed,
+      });
     } else {
       setNivel({
         idNivel: 0,
@@ -67,10 +94,12 @@ const ClubQFModule = () => {
         minCompra: 0,
         maxCompra: null,
         descuento: 0.0,
-        beneficios: "",
+        beneficios: [],
         productos: [],
       });
     }
+    setProductosDisponibles([]);
+    setBusquedaProducto("");
     setOpen(true);
   };
 
@@ -82,6 +111,7 @@ const ClubQFModule = () => {
       const payload = {
         ...nivel,
         productos: JSON.stringify(nivel.productos),
+        beneficios: JSON.stringify(nivel.beneficios),
       };
 
       if (nivel.idNivel === 0) {
@@ -107,17 +137,7 @@ const ClubQFModule = () => {
     }
   };
 
-  // 🔹 Manejo de productos en el modal
-  const handleAddProducto = () => {
-    setNivel({
-      ...nivel,
-      productos: [
-        ...nivel.productos,
-        { idProducto: Date.now(), nombreProducto: "" },
-      ],
-    });
-  };
-
+  // 🔹 Manejo de productos
   const handleRemoveProducto = (id) => {
     setNivel({
       ...nivel,
@@ -131,6 +151,74 @@ const ClubQFModule = () => {
       productos: nivel.productos.map((p) =>
         p.idProducto === id ? { ...p, [field]: value } : p
       ),
+    });
+  };
+
+  // 🔹 Manejo de beneficios
+const handleAddBeneficio = () => {
+  setNivel({
+    ...nivel,
+    beneficios: [
+      ...nivel.beneficios,
+      { id: Date.now() + Math.floor(Math.random() * 1000), descripcion: "", puntaje: 0 },
+    ],
+  });
+};
+
+const handleChangeBeneficio = (id, field, value) => {
+  setNivel({
+    ...nivel,
+    beneficios: nivel.beneficios.map((b) =>
+      b.id === id ? { ...b, [field]: value } : b
+    ),
+  });
+};
+
+const handleRemoveBeneficio = (id) => {
+  setNivel({
+    ...nivel,
+    beneficios: nivel.beneficios.filter((b) => b.id !== id),
+  });
+};
+
+  // 🔹 Buscar productos externos
+  const buscarProductosExternos = async () => {
+    if (!busquedaProducto.trim()) {
+      setProductosDisponibles([]);
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `${BASE_URL}/api/Contabilidad_Convenio/buscar-producto-club?busqueda=${encodeURIComponent(
+          busquedaProducto.trim()
+        )}`
+      );
+      setProductosDisponibles(res.data);
+    } catch (error) {
+      console.error("Error buscando productos externos", error);
+      setProductosDisponibles([]);
+    }
+  };
+
+  // 🔹 Agregar producto externo con puntaje
+  const agregarProductoExterno = (producto) => {
+    if (
+      nivel.productos.findIndex((p) => p.idProducto === producto.idProducto) !==
+      -1
+    )
+      return;
+
+    setNivel({
+      ...nivel,
+      productos: [
+        ...nivel.productos,
+        {
+          idProducto: producto.idProducto,
+          nombreProducto: producto.nombre || producto.codigoproducto || "",
+          puntaje: 0,
+        },
+      ],
     });
   };
 
@@ -160,11 +248,25 @@ const ClubQFModule = () => {
           <TableBody>
             {niveles.map((nivel) => {
               let productos = [];
+              let beneficios = [];
               try {
                 productos = JSON.parse(nivel.productos || "[]");
               } catch {
                 productos = [];
               }
+              try {
+                beneficios = JSON.parse(nivel.beneficios || "[]");
+              } catch {
+                if (typeof nivel.beneficios === "string") {
+                  beneficios = nivel.beneficios.split(";").map((b) => ({
+                    descripcion: b.trim(),
+                    puntaje: 0,
+                  }));
+                } else {
+                  beneficios = [];
+                }
+              }
+              if (!Array.isArray(beneficios)) beneficios = [];
 
               return (
                 <TableRow key={nivel.idNivel}>
@@ -176,8 +278,11 @@ const ClubQFModule = () => {
                   <TableCell>{(nivel.descuento * 100).toFixed(0)}%</TableCell>
                   <TableCell>
                     <ul>
-                      {nivel.beneficios?.split(";").map((b, i) => (
-                        <li key={i}>{b.trim()}</li>
+                      {beneficios.map((b, i) => (
+                        <li key={i}>
+                          {b.descripcion}{" "}
+                          {b.puntaje ? `(Puntaje: ${b.puntaje})` : ""}
+                        </li>
                       ))}
                     </ul>
                   </TableCell>
@@ -185,7 +290,8 @@ const ClubQFModule = () => {
                     <ul>
                       {productos.map((p) => (
                         <li key={p.idProducto}>
-                          {p.idProducto} - {p.nombreProducto}
+                          {p.idProducto} - {p.nombreProducto}{" "}
+                          {p.puntaje ? `(Puntaje: ${p.puntaje})` : ""}
                         </li>
                       ))}
                     </ul>
@@ -260,29 +366,65 @@ const ClubQFModule = () => {
               })
             }
           />
-          <TextField
-            margin="dense"
-            label="Beneficios (separados por ';')"
-            fullWidth
-            multiline
-            rows={3}
-            value={nivel.beneficios}
-            onChange={(e) =>
-              setNivel({ ...nivel, beneficios: e.target.value })
-            }
-          />
 
+          {/* Beneficios */}
           <Typography variant="h6" sx={{ mt: 2 }}>
-            Productos
+            Beneficios
+          </Typography>
+    {nivel.beneficios.map((b) => (
+  <Box key={b.id} display="flex" gap={2} alignItems="center" mt={1}>
+    <TextField
+      label="Descripción"
+      value={b.descripcion}
+      onChange={(e) =>
+        handleChangeBeneficio(b.id, "descripcion", e.target.value)
+      }
+      fullWidth
+    />
+    <TextField
+      label="Puntaje"
+      type="number"
+      value={b.puntaje}
+      onChange={(e) =>
+        handleChangeBeneficio(b.id, "puntaje", parseInt(e.target.value))
+      }
+      sx={{ width: 120 }}
+    />
+    <IconButton color="error" onClick={() => handleRemoveBeneficio(b.id)}>
+      <Delete />
+    </IconButton>
+  </Box>
+))}
+          <Button onClick={handleAddBeneficio} sx={{ mt: 1 }}>
+            + Agregar beneficio
+          </Button>
+
+          {/* Productos */}
+          <Typography variant="h6" sx={{ mt: 2 }}>
+            Productos del Nivel
           </Typography>
           {nivel.productos.map((p) => (
-            <Box key={p.idProducto} display="flex" gap={2} alignItems="center" mt={1}>
+            <Box
+              key={p.idProducto}
+              display="flex"
+              gap={2}
+              alignItems="center"
+              mt={1}
+            >
               <TextField
                 label="Nombre producto"
                 value={p.nombreProducto}
+                disabled
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                label="Puntaje"
+                type="number"
+                value={p.puntaje}
                 onChange={(e) =>
-                  handleChangeProducto(p.idProducto, "nombreProducto", e.target.value)
+                  handleChangeProducto(p.idProducto, "puntaje", parseInt(e.target.value))
                 }
+                sx={{ width: 120 }}
               />
               <IconButton
                 color="error"
@@ -292,9 +434,71 @@ const ClubQFModule = () => {
               </IconButton>
             </Box>
           ))}
-          <Button onClick={handleAddProducto} sx={{ mt: 1 }}>
-            Agregar producto
-          </Button>
+
+          {/* Buscador productos externos */}
+          <Box mt={4}>
+            <Typography variant="h6">Buscar productos disponibles</Typography>
+            <Box display="flex" gap={2} alignItems="center" mb={2}>
+              <TextField
+                label="Buscar producto"
+                value={busquedaProducto}
+                onChange={(e) => setBusquedaProducto(e.target.value)}
+                fullWidth
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    buscarProductosExternos();
+                  }
+                }}
+              />
+              <Button variant="outlined" onClick={buscarProductosExternos}>
+                Buscar
+              </Button>
+            </Box>
+
+            <Box
+              maxHeight={200}
+              overflow="auto"
+              border="1px solid #ccc"
+              borderRadius={1}
+              p={1}
+            >
+              {productosDisponibles.length === 0 && (
+                <Typography>No hay productos</Typography>
+              )}
+              {productosDisponibles.map((p) => {
+                const yaAgregado = nivel.productos.some(
+                  (prod) => prod.idProducto === p.idProducto
+                );
+                return (
+                  <Box
+                    key={p.idProducto}
+                    display="flex"
+                    justifyContent="space-between"
+                    alignItems="center"
+                    mb={1}
+                    p={1}
+                    bgcolor={yaAgregado ? "#e0e0e0" : "transparent"}
+                    borderRadius={1}
+                    sx={{ cursor: yaAgregado ? "default" : "pointer" }}
+                    onClick={() => {
+                      if (!yaAgregado) {
+                        agregarProductoExterno(p);
+                      }
+                    }}
+                  >
+                    <Typography>
+                      {p.nombre} ({p.idProducto})
+                    </Typography>
+                    {yaAgregado && (
+                      <Typography color="success.main" fontWeight="bold">
+                        Agregado
+                      </Typography>
+                    )}
+                  </Box>
+                );
+              })}
+            </Box>
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose}>Cancelar</Button>
