@@ -17,6 +17,7 @@ import Convenio from './Pages/Convenio/Convenio';
 import RegistroRH from './Pages/Convenio/RegistroRH';
 import PlantillaGenerador from './Pages/Convenio/PlantillaGenerador';
 import Descuento from './Pages/Descuento/DescuentoModule';
+import NewPackpromocione from './Pages/Descuento/DescuentoDePacks/index';
 import Cupon from './Pages/Cupon/CuponesEmpresa';
 import ListarDescuento from './Pages/Descuento/ListarDescuento';
 import Mantenimiento from './Pages/Descuento/Mantenimiento';
@@ -113,6 +114,10 @@ const AppRoutes = () => {
 
 <Route path="/descuento/pacKPromocionesModule" element={
   <PrivateRoute><PackPromocionesModule /></PrivateRoute>
+} />
+import NewPackpromocione from './Pages/Descuento/DescuentoDePacks/index';
+<Route path="/descuento/DescuentoDePacks/index" element={
+  <PrivateRoute><NewPackpromocione /></PrivateRoute>
 } />
             <Route path="/Cupon" element={
             <PrivateRoute><Cupon /></PrivateRoute>
