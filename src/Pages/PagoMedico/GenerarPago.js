@@ -7,7 +7,7 @@ import { useAuth } from '../../Compo/AuthContext';
 
 const { Option } = Select;
 
-const GenerarPago = ({ consultas, medico, fechasDetalleFila, open, onClose, recargarHoja ,modoLectura}) => {
+const GenerarPago = ({ consultas, medico, fechasDetalleFila,SedesDetalleFila, open, onClose, recargarHoja ,modoLectura}) => {
   // Datos bancarios
   const [banco, setBanco] = useState("");
   const [cuenta, setCuenta] = useState("");
@@ -55,6 +55,7 @@ const GenerarPago = ({ consultas, medico, fechasDetalleFila, open, onClose, reca
           medico: medico.nombres,
           pagoTurno: totalPagoTurno,
           fechasDetalle: fechasDetalleFila,
+          SedesDetalle:SedesDetalleFila
         },
       });
 
@@ -82,6 +83,7 @@ const GenerarPago = ({ consultas, medico, fechasDetalleFila, open, onClose, reca
           medico: medico.nombres,
           pagoTurno: totalPagoTurno,
           fechasDetalle: fechasDetalleFila,
+              SedesDetalle:SedesDetalleFila
         },
       });
 
@@ -179,7 +181,8 @@ const GenerarPago = ({ consultas, medico, fechasDetalleFila, open, onClose, reca
           AplicarDetraccion: qfDetraccion,
           FechaRegistro: new Date(),
           FechasDetalle: fechasDetalleFila,
-          idusuario: user?.emp_codigo || ""
+          idusuario: user?.emp_codigo || "",
+          SedesDetalle:SedesDetalleFila
         },
         {
           MedicoNombre: medico?.nombres,
@@ -200,7 +203,8 @@ const GenerarPago = ({ consultas, medico, fechasDetalleFila, open, onClose, reca
           AplicarDetraccion: smgDetraccion,
           FechaRegistro: new Date(),
           FechasDetalle: fechasDetalleFila,
-          idusuario: user?.emp_codigo || ""
+          idusuario: user?.emp_codigo || "",
+            SedesDetalle:SedesDetalleFila
         },
       ];
 

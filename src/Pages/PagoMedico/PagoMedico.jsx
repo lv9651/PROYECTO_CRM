@@ -15,12 +15,13 @@ import {
   Collapse,
   CircularProgress,
   Checkbox,
+  TablePagination,
 } from "@mui/material";
 import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
 import axios from "axios";
 import { BASE_URL } from "../../Conf/config";
 import { useAuth } from "../../Compo/AuthContext";
-import GenerarPago from "./GenerarPago"; // 👈 Importamos el modal
+import GenerarPago from "./GenerarPago";
 
 const PagoMedico = () => {
   const [data, setData] = useState([]);
@@ -31,9 +32,12 @@ const PagoMedico = () => {
   const [fechaFin, setFechaFin] = useState("");
   const [selectedRows, setSelectedRows] = useState({});
   const [loadingRows, setLoadingRows] = useState({});
+  const [page, setPage] = useState(0);
+  const [rowsPerPage] = useState(10);
+
   const { user } = useAuth();
 
-  // 👉 Estado del modal
+  // Modal
   const [openModal, setOpenModal] = useState(false);
   const [selectedMedico, setSelectedMedico] = useState(null);
   const [selectedConsultas, setSelectedConsultas] = useState([]);
@@ -77,33 +81,60 @@ const PagoMedico = () => {
     setSelectedRows(newSelection);
   };
 
-  const allSelected =
-    filteredData.length > 0 &&
-    filteredData.every((row) => selectedRows[`${row.sede}_${row.medico}`]);
+  const allSelected = filteredData.length > 0 && filteredData.every((row) => selectedRows[`${row.sede}_${row.medico}`]);
+  const someSelected = Object.values(selectedRows).filter(Boolean).length > 0 && !allSelected;
 
-  const someSelected =
-    Object.values(selectedRows).filter(Boolean).length > 0 && !allSelected;
+  const handleOpenModal = (row) => {
+    setSelectedMedico({ nombres: row.medico });
+    setSelectedConsultas(row.detalles);
 
-  // 👉 Función para abrir modal con datos de la fila
-const handleOpenModal = (row) => {
-  setSelectedMedico({ nombres: row.medico });
-  setSelectedConsultas(row.detalles);
+    const fechasUnicas = [
+      ...new Set(row.detalles.map((d) => new Date(d.fecha).toISOString().split("T")[0])),
+    ];
 
-  // Convertir las fechas a yyyy-MM-dd y quitar duplicados
-  const fechasUnicas = [
-    ...new Set(
-      row.detalles.map(
-        (d) => new Date(d.fecha).toISOString().split("T")[0]
-      )
-    ),
-  ];
+    setFechasDetalleFila(fechasUnicas.join(","));
+    setOpenModal(true);
+  };
 
-  // Convertir a string separado por comas
-  const fechasComas = fechasUnicas.join(",");
+  // ✅ Procesar validaciones
+  const handleProcesarValidaciones = async () => {
+    const usuario = user?.emp_codigo || "admin";
+    const now = new Date().toISOString();
 
-  setFechasDetalleFila(fechasComas);
-  setOpenModal(true);
-};
+    const filasAValidar = filteredData.filter((row) => selectedRows[`${row.sede}_${row.medico}`]);
+
+    if (filasAValidar.length === 0) {
+      alert("No hay filas seleccionadas para validar");
+      return;
+    }
+
+    try {
+      for (const fila of filasAValidar) {
+        for (const detalle of fila.detalles) {
+          const fecha = new Date(detalle.fecha).toISOString().split("T")[0];
+          const sede = detalle.sede.trim();
+          const pagoTurno = Number(detalle.pagoTurno).toFixed(2);
+          const numColegiatura = detalle.numColegiatura.toString().padStart(6, "0");
+          const idConcatenado = `${fecha}_${sede}_${pagoTurno}_${numColegiatura}`;
+
+          await axios.put(`${BASE_URL}/api/Contabilidad_Convenio/validar/${idConcatenado}?usuario=${usuario}`);
+          console.log("✅ Validado:", idConcatenado);
+        }
+      }
+
+      alert("✅ Validaciones procesadas correctamente");
+      fetchData();
+    } catch (err) {
+      console.error("Error al validar:", err);
+      alert("❌ Ocurrió un error al validar");
+    }
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const paginatedData = filteredData.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
   return (
     <Box sx={{ p: 4, backgroundColor: "#f9fafb", minHeight: "100vh" }}>
@@ -118,110 +149,120 @@ const handleOpenModal = (row) => {
         <Button variant="contained" color="primary" onClick={fetchData} sx={{ height: 56 }}>
           Consultar
         </Button>
+        <Button variant="contained" color="success" onClick={handleProcesarValidaciones} sx={{ height: 56 }}>
+          Procesar Validaciones
+        </Button>
       </Box>
 
       {loading ? (
         <Box display="flex" justifyContent="center" mt={6}><CircularProgress /></Box>
       ) : (
-        <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2, overflowX: "auto" }}>
-          <Table>
-            <TableHead sx={{ backgroundColor: "#f3f4f6" }}>
-              <TableRow>
-                <TableCell padding="checkbox">
-                  <Checkbox indeterminate={someSelected} checked={allSelected} onChange={handleSelectAll} />
-                </TableCell>
-                <TableCell />
-                <TableCell>Sede</TableCell>
-                <TableCell>Médico</TableCell>
-                <TableCell>Pago Turno</TableCell>
-                <TableCell>N° Consultas</TableCell>
-                <TableCell>Cant Proc</TableCell>
-                <TableCell>Total</TableCell>
-                <TableCell>Fórmulas</TableCell>
-                <TableCell>Acciones</TableCell> {/* 👈 Nueva columna */}
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {filteredData.map((row, index) => {
-                const key = `${row.sede}_${row.medico}`;
-                return (
-                  <React.Fragment key={key}>
-                    <TableRow hover>
-                      <TableCell padding="checkbox">
-                        {loadingRows[key] ? (
-                          <CircularProgress size={24} />
-                        ) : (
-                          <Checkbox
-                            checked={!!selectedRows[key]}
-                            onChange={() => handleSelectRow(key)}
-                          />
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <IconButton size="small" onClick={() => setOpenRow(openRow === index ? null : index)}>
-                          {openRow === index ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
-                        </IconButton>
-                      </TableCell>
-                      <TableCell>{row.sede}</TableCell>
-                      <TableCell>{row.medico}</TableCell>
-                      <TableCell>{row.pagoTurno}</TableCell>
-                      <TableCell>{row.totalNConsultas}</TableCell>
-                      <TableCell>{row.totalCantProc}</TableCell>
-                      <TableCell>{row.total.toFixed(2)}</TableCell>
-                      <TableCell>{row.totalFormulas}</TableCell>
-                      <TableCell>
-                        <Button
-                          variant="contained"
-                          size="small"
-                          color="secondary"
-                          onClick={() => handleOpenModal(row)}
-                        >
-                          Generar Pago
-                        </Button>
-                      </TableCell>
-                    </TableRow>
+        <>
+          <TableContainer component={Paper} sx={{ boxShadow: 3, borderRadius: 2, overflowX: "auto" }}>
+            <Table>
+              <TableHead sx={{ backgroundColor: "#f3f4f6" }}>
+                <TableRow>
+                  <TableCell padding="checkbox">
+                    <Checkbox indeterminate={someSelected} checked={allSelected} onChange={handleSelectAll} />
+                  </TableCell>
+                  <TableCell />
+                  <TableCell>Médico</TableCell>
+                  <TableCell>Pago Turno</TableCell>
+                  <TableCell>N° Consultas</TableCell>
+                  <TableCell>Cant Proc</TableCell>
+                  <TableCell>Total</TableCell>
+                  <TableCell>Fórmulas</TableCell>
+                  <TableCell>Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {paginatedData.map((row, index) => {
+                  const key = `${row.sede}_${row.medico}`;
+                  return (
+                    <React.Fragment key={key}>
+                      <TableRow hover>
+                        <TableCell padding="checkbox">
+                          {loadingRows[key] ? (
+                            <CircularProgress size={24} />
+                          ) : (
+                            <Checkbox
+                              checked={!!selectedRows[key]}
+                              onChange={() => handleSelectRow(key)}
+                            />
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <IconButton size="small" onClick={() => setOpenRow(openRow === index ? null : index)}>
+                            {openRow === index ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                          </IconButton>
+                        </TableCell>
+                        <TableCell>{row.medico}</TableCell>
+                        <TableCell>{row.pagoTurno}</TableCell>
+                        <TableCell>{row.totalNConsultas}</TableCell>
+                        <TableCell>{row.totalCantProc}</TableCell>
+                        <TableCell>{row.total.toFixed(2)}</TableCell>
+                        <TableCell>{row.totalFormulas}</TableCell>
+                        <TableCell>
+                          <Button variant="contained" size="small" color="secondary" onClick={() => handleOpenModal(row)}>
+                            Ver Pago
+                          </Button>
+                        </TableCell>
+                      </TableRow>
 
-                    <TableRow>
-                      <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={10}>
-                        <Collapse in={openRow === index} timeout="auto" unmountOnExit>
-                          <Box margin={2}>
-                            <Typography variant="subtitle1" gutterBottom>
-                              Detalle de Consultas
-                            </Typography>
-                            <Table size="small">
-                              <TableHead>
-                                <TableRow>
-                                  <TableCell>Fecha</TableCell>
-                                  <TableCell>Turno</TableCell>
-                                  <TableCell>N° Consultas</TableCell>
-                                  <TableCell>Cant Proc</TableCell>
-                                  <TableCell>Total</TableCell>
-                                  <TableCell>Fórmulas</TableCell>
-                                </TableRow>
-                              </TableHead>
-                              <TableBody>
-                                {row.detalles.map((det, detIndex) => (
-                                  <TableRow key={detIndex}>
-                                    <TableCell>{new Date(det.fecha).toLocaleDateString()}</TableCell>
-                                    <TableCell>{det.turno}</TableCell>
-                                    <TableCell>{det.nConsultas}</TableCell>
-                                    <TableCell>{det.cantProc}</TableCell>
-                                    <TableCell>{det.total.toFixed(2)}</TableCell>
-                                    <TableCell>{det.formulas}</TableCell>
+                      <TableRow>
+                        <TableCell colSpan={10} style={{ paddingBottom: 0, paddingTop: 0 }}>
+                          <Collapse in={openRow === index} timeout="auto" unmountOnExit>
+                            <Box margin={2}>
+                              <Typography variant="subtitle1" gutterBottom>
+                                Detalle de Consultas
+                              </Typography>
+                              <Table size="small">
+                                <TableHead>
+                                  <TableRow>
+                                    <TableCell>Sede</TableCell>
+                                    <TableCell>Fecha</TableCell>
+                                    <TableCell>Turno</TableCell>
+                                    <TableCell>N° Consultas</TableCell>
+                                    <TableCell>Cant Proc</TableCell>
+                                    <TableCell>Total</TableCell>
+                                    <TableCell>Fórmulas</TableCell>
                                   </TableRow>
-                                ))}
-                              </TableBody>
-                            </Table>
-                          </Box>
-                        </Collapse>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                                </TableHead>
+                                <TableBody>
+                                  {row.detalles.map((det, detIndex) => (
+                                    <TableRow key={detIndex}>
+                                      <TableCell>{det.sede}</TableCell>
+                                      <TableCell>{new Date(det.fecha).toLocaleDateString()}</TableCell>
+                                      <TableCell>{det.turno}</TableCell>
+                                      <TableCell>{det.nConsultas}</TableCell>
+                                      <TableCell>{det.cantProc}</TableCell>
+                                      <TableCell>{det.total.toFixed(2)}</TableCell>
+                                      <TableCell>{det.formulas}</TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </Box>
+                          </Collapse>
+                        </TableCell>
+                      </TableRow>
+                    </React.Fragment>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
+
+          {/* Paginación */}
+          <TablePagination
+            component="div"
+            count={filteredData.length}
+            page={page}
+            onPageChange={handleChangePage}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[10]}
+          />
+        </>
       )}
 
       {/* Modal GenerarPago */}
@@ -232,7 +273,8 @@ const handleOpenModal = (row) => {
           medico={selectedMedico}
           consultas={selectedConsultas}
           fechasDetalleFila={fechasDetalleFila}
-            recargarHoja={fetchData} 
+          recargarHoja={fetchData}
+           modoLectura={true}
         />
       )}
     </Box>
