@@ -86,9 +86,9 @@ const Convenio = () => {
       // Preparar Excel como hacías antes
       let data = [];
       if (documento === 'SIN RXH') {
-        data = [["representante", "lugar", "nombre", "tipo_Documento", "doc_Identidad", "ruc", "banco",
-                 "cuenta_Corriente", "cuenta_Interbancaria", "Unid_fm", "ventas", "Pago_Bruto", "pago_Despues",
-                 "Descuento", "Renta", "Pago_Despues_Neto"]];
+        data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "doc_Identidad", "ruc", "banco",
+                 "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "Pago_Bruto", "pago_Despues",
+                 "Descuento", "Renta", "PagoDespuesNeto"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
@@ -110,11 +110,11 @@ const Convenio = () => {
           ]);
         });
       } else {
-        data = [["Representante", "lugar", "nombre", "tipo_Documento", "doc_Identidad", "ruc", "banco",
-                 "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "pago_Bruto",
-                 "pago_Despues", "descuento", "renta", "pago_Despues_Neto", "fecha_Emision",
-                 "documento", "serie", "numero", "importe", "detraccion", "renta_Final", "total_A_Pagar",
-                 "descripcion", "observaciones"]];
+        data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "DocIdentidad", "RUC", "Banco",
+                 "CuentaCorriente", "CuentaInterbancaria", "UnidadFm", "Ventas", "PagoBruto",
+                 "PagoDespues", "Descuento", "Renta", "PagoDespuesNeto", "FechaEmision",
+                 "Documento", "Serie", "Numero", "Importe", "Detraccion", "RentaFinal", "TotalAPagar",
+                 "Descripcion", "Observaciones"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
