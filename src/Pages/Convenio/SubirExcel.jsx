@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import {
-  Button, CircularProgress, Grid, Alert, Paper, Typography, FormControl, InputLabel,
-  Select, MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
-  Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow,
-  IconButton
+  Button, CircularProgress, Grid, Alert, Paper, Typography, FormControl, InputLabel, 
+  Select, MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, TextField, 
+  Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, 
+  TableSortLabel, IconButton
 } from '@mui/material';
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import axios from 'axios';
@@ -21,17 +21,29 @@ const SubirExcel = ({ onFileUploaded }) => {
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('id');
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(3);
+  const [editedPago, setEditedPago] = useState(null); // Estado para manejar edición
   const { user } = useAuth();
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) setSelectedFile(file);
+    if (file) {
+      setSelectedFile(file);
+    }
   };
 
-  const handleTipoPagoChange = (e) => setTipoPago(e.target.value);
-  const handleFechaDesdeChange = (e) => setFechaDesde(e.target.value);
-  const handleFechaHastaChange = (e) => setFechaHasta(e.target.value);
+  const handleTipoPagoChange = (e) => {
+    setTipoPago(e.target.value);
+  };
+
+  const handleFechaDesdeChange = (e) => {
+    setFechaDesde(e.target.value);
+  };
+
+  const handleFechaHastaChange = (e) => {
+    setFechaHasta(e.target.value);
+  };
+
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
@@ -55,10 +67,11 @@ const SubirExcel = ({ onFileUploaded }) => {
     formData.append('idrepresentante', user.emp_codigo);
 
     try {
-      await axios.post('https://localhost:7146/api/Contabilidad_Convenio/SubirExcel', formData, {
+      const resp = await axios.post('https://localhost:7146/api/Contabilidad_Convenio/SubirExcel', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
-      onFileUploaded();
+      console.log('Respuesta de la API:', resp.data);
+      onFileUploaded(); // Callback para actualizar el estado
       setSelectedFile(null);
       handleCloseModal();
     } catch (err) {
@@ -79,8 +92,8 @@ const SubirExcel = ({ onFileUploaded }) => {
     setLoading(true);
 
     try {
-      const response = await axios.get(`https://localhost:7146/api/Contabilidad_Convenio/representante/${user.emp_codigo}`, {
-        params: { fechaDesde, fechaHasta },
+      const response = await axios.get('https://localhost:7146/api/Contabilidad_Convenio/representante/' + user.emp_codigo, {
+        params: { fechaDesde: fechaDesde, fechaHasta: fechaHasta },
       });
       setPagos(response.data);
     } catch (err) {
@@ -91,7 +104,16 @@ const SubirExcel = ({ onFileUploaded }) => {
     }
   };
 
-  const handleChangePage = (event, newPage) => setPage(newPage);
+  const handleRequestSort = (event, property) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -99,43 +121,40 @@ const SubirExcel = ({ onFileUploaded }) => {
 
   const sortData = (array) => {
     return array.sort((a, b) => {
-      if (orderBy === 'id') return order === 'asc' ? a.id - b.id : b.id - a.id;
-      if (orderBy === 'importe') return order === 'asc' ? a.importe - b.importe : b.importe - a.importe;
+      if (orderBy === 'id') {
+        return order === 'asc' ? a.id - b.id : b.id - a.id;
+      }
+      if (orderBy === 'importe') {
+        return order === 'asc' ? a.importe - b.importe : b.importe - a.importe;
+      }
       return 0;
     });
   };
 
   const paginatedData = sortData(pagos).slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage);
 
-const handleDelete = async (id) => {
-  setLoading(true);
-  setError('');
-  try {
-    await axios.delete(`https://localhost:7146/api/Contabilidad_Convenio/representanteelim/${id}`);
-    // Actualizar estado local removiendo el pago eliminado
-
-    setPagos((prevPagos) => prevPagos.filter(pago => pago.id !== id));
-  } catch (err) {
-    console.error('Error al eliminar el pago:', err);
-    setError('Error al eliminar el pago');
-  } finally {
-    setLoading(false);
-  }
-};
-  const handleCellEdit = (id, key, value) => {
-    setPagos(pagos.map(pago => pago.id === id ? { ...pago, [key]: value } : pago));
+  const handleDelete = (id) => {
+    console.log("Eliminar pago con ID:", id);
+    setPagos(pagos.filter(pago => pago.id !== id));
   };
 
-  
+  const handleCellEdit = (id, key, value) => {
+    setPagos(pagos.map(pago => 
+      pago.id === id ? { ...pago, [key]: value } : pago
+    ));
+  };
+
   const handleUpdatePago = async (pago) => {
     setLoading(true);
     setError('');
 
     try {
-      await axios.put(
+      const response = await axios.put(
         `https://localhost:7146/api/Contabilidad_Convenio/ActrepresentanteCarg/${pago.id}`,
         pago
       );
+      console.log('Pago actualizado:', response.data);
+      // Recargar la lista de pagos o realizar alguna acción adicional
       obtenerPagos();
     } catch (err) {
       console.error('Error al actualizar el pago:', err);
@@ -144,8 +163,6 @@ const handleDelete = async (id) => {
       setLoading(false);
     }
   };
-
-  const isDateField = (key) => ['fechaEmision'].includes(key);
 
   return (
     <Paper sx={{ p: 3, mt: 3 }}>
@@ -157,19 +174,25 @@ const handleDelete = async (id) => {
 
       <Grid container spacing={2} mb={2}>
         <Grid item xs={12} sm={4} md={3}>
-          <Button variant="contained" color="secondary" fullWidth onClick={handleOpenModal}>
+          <Button
+            variant="contained"
+            color="secondary"
+            fullWidth
+            onClick={handleOpenModal}
+          >
             Subir Excel
           </Button>
         </Grid>
       </Grid>
 
+      {/* Modal de subida de archivo */}
       <Dialog open={openModal} onClose={handleCloseModal} fullWidth>
         <DialogTitle>Subir Archivo y Seleccionar Tipo de Pago</DialogTitle>
         <DialogContent>
           {error && <Alert severity="error">{error}</Alert>}
 
           <Grid container spacing={2} mb={2}>
-            <Grid item xs={12} sm={4}>
+            <Grid item xs={12} sm={4} md={3}>
               <FormControl fullWidth size="small">
                 <InputLabel id="tipo-pago-label">Tipo de Pago</InputLabel>
                 <Select
@@ -184,10 +207,20 @@ const handleDelete = async (id) => {
               </FormControl>
             </Grid>
 
-            <Grid item xs={12} sm={4}>
-              <Button variant="contained" color="secondary" fullWidth component="label">
+            <Grid item xs={12} sm={4} md={3}>
+              <Button
+                variant="contained"
+                color="secondary"
+                fullWidth
+                component="label"
+              >
                 Seleccionar Excel
-                <input type="file" hidden accept=".xlsx, .xls" onChange={handleFileChange} />
+                <input
+                  type="file"
+                  hidden
+                  accept=".xlsx, .xls"
+                  onChange={handleFileChange}
+                />
               </Button>
             </Grid>
 
@@ -202,13 +235,16 @@ const handleDelete = async (id) => {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={handleCloseModal} color="secondary">Cancelar</Button>
+          <Button onClick={handleCloseModal} color="secondary">
+            Cancelar
+          </Button>
           <Button onClick={subirArchivo} color="primary" disabled={loading}>
             {loading ? <CircularProgress size={20} color="inherit" /> : 'Subir Archivo'}
           </Button>
         </DialogActions>
       </Dialog>
 
+      {/* Consultar pagos */}
       <Typography variant="h5" gutterBottom mt={4}>
         Consultar Pagos por Fecha
       </Typography>
@@ -222,7 +258,9 @@ const handleDelete = async (id) => {
             variant="outlined"
             value={fechaDesde}
             onChange={handleFechaDesdeChange}
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
         </Grid>
 
@@ -234,29 +272,39 @@ const handleDelete = async (id) => {
             variant="outlined"
             value={fechaHasta}
             onChange={handleFechaHastaChange}
-            InputLabelProps={{ shrink: true }}
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
         </Grid>
 
         <Grid item xs={12} sm={4}>
-          <Button variant="contained" color="primary" fullWidth onClick={obtenerPagos} disabled={loading}>
+          <Button
+            variant="contained"
+            color="primary"
+            fullWidth
+            onClick={obtenerPagos}
+            disabled={loading}
+          >
             {loading ? <CircularProgress size={20} color="inherit" /> : 'Obtener Pagos'}
           </Button>
         </Grid>
       </Grid>
 
+      {/* Mostrar pagos */}
       {pagos.length > 0 && (
         <Grid container spacing={2} mt={3}>
           <Grid item xs={12}>
-            <Paper elevation={2} sx={{ p: 2, overflowX: 'auto' }}>
-              <Typography variant="h6" gutterBottom>Resultados de los Pagos</Typography>
-
-              <TableContainer sx={{ maxHeight: 500 }}>
-                <Table stickyHeader size="small">
+            <Paper elevation={2} sx={{ p: 2 }}>
+              <Typography variant="h6" gutterBottom>
+                Resultados de los Pagos
+              </Typography>
+              <TableContainer>
+                <Table sx={{ minWidth: 1200 }} aria-labelledby="tableTitle">
                   <TableHead>
-                    <TableRow>
+                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                       {['ID', 'Tipo de Pago', 'Representante', 'Lugar', 'Nombre', 'Tipo Documento', 'Documento de Identidad', 'RUC', 'Banco', 'Cuenta Corriente', 'Cuenta Interbancaria', 'Unidad FM', 'Ventas', 'Pago Bruto', 'Pago Después', 'Descuento', 'Renta', 'Pago Después Neto', 'Fecha Emisión', 'Documento', 'Serie', 'Numero', 'Importe', 'Detracción', 'Renta Final', 'Total a Pagar', 'Descripción', 'Observaciones', 'Acciones'].map((label) => (
-                        <TableCell key={label} sx={{ fontWeight: 'bold', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                        <TableCell key={label} sx={{ fontWeight: 'bold' }}>
                           {label}
                         </TableCell>
                       ))}
@@ -265,38 +313,26 @@ const handleDelete = async (id) => {
                   <TableBody>
                     {paginatedData.map((pago) => (
                       <TableRow hover key={pago.id}>
-                        {Object.keys(pago).map((key) =>
+                        {Object.keys(pago).map((key) => (
                           key !== 'id' ? (
-                            <TableCell key={key} sx={{ padding: '5px', fontSize: '0.75rem', minWidth: 120 }}>
-                              {isDateField(key) ? (
-                                <TextField
-                                  type="date"
-                                  size="small"
-                                  value={pago[key] ? pago[key].substring(0, 10) : ''}
-                                  onChange={(e) => handleCellEdit(pago.id, key, e.target.value)}
-                                  fullWidth
-                                  sx={{ fontSize: '0.75rem' }}
-                                />
-                              ) : (
-                                <TextField
-                                  size="small"
-                                  value={pago[key]}
-                                  onChange={(e) => handleCellEdit(pago.id, key, e.target.value)}
-                                  fullWidth
-                                  sx={{ fontSize: '0.75rem' }}
-                                />
-                              )}
+                            <TableCell key={key} sx={{ padding: '10px' }}>
+                              <TextField
+                                fullWidth
+                                variant="outlined"
+                                value={pago[key]}
+                                onChange={(e) => handleCellEdit(pago.id, key, e.target.value)}
+                                size="small"
+                                sx={{ maxWidth: 180 }} // Ajuste de tamaño para las celdas de texto
+                              />
                             </TableCell>
-                          ) : (
-                            <TableCell key={key} sx={{ fontSize: '0.75rem' }}>{pago[key]}</TableCell>
-                          )
-                        )}
+                          ) : <TableCell key={key}>{pago[key]}</TableCell>
+                        ))}
                         <TableCell>
-                          <IconButton color="error" onClick={() => handleDelete(pago.id)} size="small">
-                            <DeleteIcon fontSize="small" />
+                          <IconButton color="error" onClick={() => handleDelete(pago.id)}>
+                            <DeleteIcon />
                           </IconButton>
-                          <IconButton color="primary" onClick={() => handleUpdatePago(pago)} size="small">
-                            <EditIcon fontSize="small" />
+                          <IconButton color="primary" onClick={() => handleUpdatePago(pago)}>
+                            <EditIcon />
                           </IconButton>
                         </TableCell>
                       </TableRow>
@@ -304,7 +340,6 @@ const handleDelete = async (id) => {
                   </TableBody>
                 </Table>
               </TableContainer>
-
               <TablePagination
                 rowsPerPageOptions={[5, 10, 25]}
                 component="div"
@@ -313,6 +348,10 @@ const handleDelete = async (id) => {
                 page={page}
                 onPageChange={handleChangePage}
                 onRowsPerPageChange={handleChangeRowsPerPage}
+                sx={{
+                  '& .MuiTablePagination-select': { fontSize: '1rem' },
+                  '& .MuiTablePagination-toolbar': { padding: '16px' },
+                }}
               />
             </Paper>
           </Grid>

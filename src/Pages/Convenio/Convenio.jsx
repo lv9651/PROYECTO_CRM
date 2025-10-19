@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import {
   Container,
   Typography,
@@ -33,19 +33,20 @@ import { useAuth } from '../../Compo/AuthContext';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import SubirExcel from '../Convenio/SubirExcel';
-
+import { useNavigate } from 'react-router-dom';
 const Convenio = () => {
   const { user } = useAuth();
+ const navigate = useNavigate();
+  // ✅ Hooks definidos fuera de cualquier condición
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [documento, setDocumento] = useState('');
   const [medicos, setMedicos] = useState([]);
   const [loadingMedicos, setLoadingMedicos] = useState(false);
   const [errorMedicos, setErrorMedicos] = useState('');
-
-  // Para diálogo de añadir/editar
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogMode, setDialogMode] = useState('add'); // 'add' o 'edit'
+  const [dialogMode, setDialogMode] = useState('add');
+
   const [medicoForm, setMedicoForm] = useState({
     docum: '',
     representante: '',
@@ -59,8 +60,14 @@ const Convenio = () => {
     cuenta_Interbancaria: ''
   });
 
-  // --- Funciones de API CRUD ---
+  // ✅ Mostrar otro módulo si perfil es CONTABILIDAD
+   useEffect(() => {
+    if (user?.perfilCodigo === 'CONTABILIDAD') {
+      navigate('/ConvenioConta');
+    }
+  }, [user, navigate]);
 
+  // ✅ Funciones
   const descargarPlantilla = async () => {
     if (!user || !user.emp_codigo || !documento) {
       setError('Debe seleccionar un documento.');
@@ -68,7 +75,6 @@ const Convenio = () => {
     }
     setError('');
     setLoading(true);
-
     try {
       const resp = await axios.get('https://localhost:7146/api/Contabilidad_Convenio/ObtenerRepresentanteConPagos', {
         params: {
@@ -76,6 +82,7 @@ const Convenio = () => {
           docum: documento
         }
       });
+
       const convenios = resp.data;
       if (!convenios || convenios.length === 0) {
         setError('No hay datos disponibles para descargar');
@@ -83,12 +90,11 @@ const Convenio = () => {
         return;
       }
 
-      // Preparar Excel como hacías antes
       let data = [];
       if (documento === 'SIN RXH') {
         data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "doc_Identidad", "ruc", "banco",
-                 "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "Pago_Bruto", "pago_Despues",
-                 "Descuento", "Renta", "PagoDespuesNeto"]];
+          "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "Pago_Bruto", "pago_Despues",
+          "Descuento", "Renta", "PagoDespuesNeto"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
@@ -111,10 +117,10 @@ const Convenio = () => {
         });
       } else {
         data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "DocIdentidad", "RUC", "Banco",
-                 "CuentaCorriente", "CuentaInterbancaria", "UnidadFm", "Ventas", "PagoBruto",
-                 "PagoDespues", "Descuento", "Renta", "PagoDespuesNeto", "FechaEmision",
-                 "Documento", "Serie", "Numero", "Importe", "Detraccion", "RentaFinal", "TotalAPagar",
-                 "Descripcion", "Observaciones"]];
+          "CuentaCorriente", "CuentaInterbancaria", "UnidadFm", "Ventas", "PagoBruto",
+          "PagoDespues", "Descuento", "Renta", "PagoDespuesNeto", "FechaEmision",
+          "Documento", "Serie", "Numero", "Importe", "Detraccion", "RentaFinal", "TotalAPagar",
+          "Descripcion", "Observaciones"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
@@ -192,11 +198,6 @@ const Convenio = () => {
     }
   };
 
-    const handleFileUploaded = () => {
-    // Aquí puedes hacer algo después de que el archivo se haya subido, por ejemplo, refrescar la lista de convenios.
-    console.log('Archivo subido con éxito');
-  };
-
   const abrirDialogAgregar = () => {
     setDialogMode('add');
     setMedicoForm({
@@ -210,7 +211,7 @@ const Convenio = () => {
       banco: '',
       cuenta_Corriente: '',
       cuenta_Interbancaria: '',
-      idMedico:user.emp_codigo
+      idMedico: user.emp_codigo
     });
     setDialogOpen(true);
   };
@@ -222,7 +223,6 @@ const Convenio = () => {
   };
 
   const guardarMedico = async () => {
-    // Validaciones simples
     if (!medicoForm.docum || !medicoForm.doc_Identidad || !medicoForm.nombre) {
       setError('Los campos Docum, Doc Identidad y Nombre son obligatorios');
       return;
@@ -235,7 +235,6 @@ const Convenio = () => {
       } else {
         await axios.put('https://localhost:7146/api/Contabilidad_Convenio/ActuMedic', medicoForm);
       }
-      // Refrescar lista
       await buscarMedicos();
       setDialogOpen(false);
     } catch (err) {
@@ -266,6 +265,11 @@ const Convenio = () => {
     }
   };
 
+  const handleFileUploaded = () => {
+    console.log('Archivo subido con éxito');
+  };
+
+  // ✅ Render principal (no CONTABILIDAD)
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Card elevation={4}>
@@ -377,13 +381,13 @@ const Convenio = () => {
               </Paper>
             </>
           )}
-              <SubirExcel onFileUploaded={handleFileUploaded} />
 
+          <SubirExcel onFileUploaded={handleFileUploaded} />
           {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
         </CardContent>
       </Card>
 
-      {/* Diálogo para agregar/editar médico */}
+      {/* Diálogo */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{dialogMode === 'add' ? 'Agregar Médico' : 'Editar Médico'}</DialogTitle>
         <DialogContent>
@@ -401,6 +405,7 @@ const Convenio = () => {
                 <MenuItem value="AMBOS">AMBOS</MenuItem>
               </Select>
             </FormControl>
+
             <TextField
               size="small"
               label="Documento de Identidad"
@@ -415,15 +420,16 @@ const Convenio = () => {
               value={medicoForm.nombre}
               onChange={e => setMedicoForm(prev => ({ ...prev, nombre: e.target.value }))}
             />
-          {dialogMode === 'edit' && (
-  <TextField
-    size="small"
-    label="Representante"
-    fullWidth
-    value={medicoForm.representante}
-    onChange={e => setMedicoForm(prev => ({ ...prev, representante: e.target.value }))}
-  />
-)}
+
+            {dialogMode === 'edit' && (
+              <TextField
+                size="small"
+                label="Representante"
+                fullWidth
+                value={medicoForm.representante}
+                onChange={e => setMedicoForm(prev => ({ ...prev, representante: e.target.value }))}
+              />
+            )}
 
             <TextField
               size="small"
@@ -432,18 +438,20 @@ const Convenio = () => {
               value={medicoForm.lugar}
               onChange={e => setMedicoForm(prev => ({ ...prev, lugar: e.target.value }))}
             />
-          <FormControl size="small" fullWidth>
-  <InputLabel id="tipo-doc-label">Tipo Documento</InputLabel>
-  <Select
-    labelId="tipo-doc-label"
-    value={medicoForm.tipo_Documento}
-    onChange={e => setMedicoForm(prev => ({ ...prev, tipo_Documento: e.target.value }))}
-    label="Tipo Documento"
-  >
-    <MenuItem value={1}>DNI</MenuItem>
-    <MenuItem value={3}>Carnet de Extranjería</MenuItem>
-  </Select>
-</FormControl>
+
+            <FormControl size="small" fullWidth>
+              <InputLabel id="tipo-doc-label">Tipo Documento</InputLabel>
+              <Select
+                labelId="tipo-doc-label"
+                value={medicoForm.tipo_Documento}
+                onChange={e => setMedicoForm(prev => ({ ...prev, tipo_Documento: e.target.value }))}
+                label="Tipo Documento"
+              >
+                <MenuItem value={1}>DNI</MenuItem>
+                <MenuItem value={3}>Carnet de Extranjería</MenuItem>
+              </Select>
+            </FormControl>
+
             <TextField
               size="small"
               label="RUC"
@@ -451,24 +459,26 @@ const Convenio = () => {
               value={medicoForm.ruc}
               onChange={e => setMedicoForm(prev => ({ ...prev, ruc: e.target.value }))}
             />
-          <FormControl size="small" fullWidth>
-  <InputLabel id="banco-label">Banco</InputLabel>
-  <Select
-    labelId="banco-label"
-    value={medicoForm.banco}
-    onChange={e => setMedicoForm(prev => ({ ...prev, banco: e.target.value }))}
-    label="Banco"
-  >
-    <MenuItem value="BANBIF">BANBIF</MenuItem>
-    <MenuItem value="BANCO DE LA NACION">BANCO DE LA NACION</MenuItem>
-    <MenuItem value="BBVA">BBVA</MenuItem>
-    <MenuItem value="BCP">BCP</MenuItem>
-    <MenuItem value="CAJA PIURA">CAJA PIURA</MenuItem>
-    <MenuItem value="FALABELLA">FALABELLA</MenuItem>
-    <MenuItem value="INTERBANK">INTERBANK</MenuItem>
-    <MenuItem value="SCOTIABANK">SCOTIABANK</MenuItem>
-  </Select>
-</FormControl>
+
+            <FormControl size="small" fullWidth>
+              <InputLabel id="banco-label">Banco</InputLabel>
+              <Select
+                labelId="banco-label"
+                value={medicoForm.banco}
+                onChange={e => setMedicoForm(prev => ({ ...prev, banco: e.target.value }))}
+                label="Banco"
+              >
+                <MenuItem value="BANBIF">BANBIF</MenuItem>
+                <MenuItem value="BANCO DE LA NACION">BANCO DE LA NACION</MenuItem>
+                <MenuItem value="BBVA">BBVA</MenuItem>
+                <MenuItem value="BCP">BCP</MenuItem>
+                <MenuItem value="CAJA PIURA">CAJA PIURA</MenuItem>
+                <MenuItem value="FALABELLA">FALABELLA</MenuItem>
+                <MenuItem value="INTERBANK">INTERBANK</MenuItem>
+                <MenuItem value="SCOTIABANK">SCOTIABANK</MenuItem>
+              </Select>
+            </FormControl>
+
             <TextField
               size="small"
               label="Cuenta Corriente"
@@ -476,6 +486,7 @@ const Convenio = () => {
               value={medicoForm.cuenta_Corriente}
               onChange={e => setMedicoForm(prev => ({ ...prev, cuenta_Corriente: e.target.value }))}
             />
+
             <TextField
               size="small"
               label="Cuenta Interbancaria"
@@ -487,9 +498,7 @@ const Convenio = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
-          <Button variant="contained" onClick={guardarMedico} disabled={loading}>
-            {loading ? <CircularProgress size={20} /> : (dialogMode === 'add' ? 'Agregar' : 'Actualizar')}
-          </Button>
+          <Button onClick={guardarMedico} variant="contained" color="primary">Guardar</Button>
         </DialogActions>
       </Dialog>
     </Container>
