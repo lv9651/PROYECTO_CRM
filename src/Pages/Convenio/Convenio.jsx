@@ -34,6 +34,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import SubirExcel from '../Convenio/SubirExcel';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../Conf/config';
 const Convenio = () => {
   const { user } = useAuth();
  const navigate = useNavigate();
@@ -76,7 +77,9 @@ const Convenio = () => {
     setError('');
     setLoading(true);
     try {
-      const resp = await axios.get('https://localhost:7146/api/Contabilidad_Convenio/ObtenerRepresentanteConPagos', {
+
+  
+      const resp = await axios.get(`${BASE_URL}/api/Contabilidad_Convenio/ObtenerRepresentanteConPagos`, {
         params: {
           idMedico: user.emp_codigo,
           docum: documento
@@ -179,7 +182,7 @@ const Convenio = () => {
     }
 
     try {
-      const resp = await axios.get('https://localhost:7146/api/Contabilidad_Convenio/ObtMedic', {
+      const resp = await axios.get(`${BASE_URL}/api/Contabilidad_Convenio/ObtMedic`, {
         params: {
           docum: documento,
           idmedico: user.emp_codigo
@@ -231,9 +234,9 @@ const Convenio = () => {
     setLoading(true);
     try {
       if (dialogMode === 'add') {
-        await axios.post('https://localhost:7146/api/Contabilidad_Convenio/InsertMedi', medicoForm);
+        await axios.post(`${BASE_URL}/api/Contabilidad_Convenio/InsertMedi`, medicoForm);
       } else {
-        await axios.put('https://localhost:7146/api/Contabilidad_Convenio/ActuMedic', medicoForm);
+        await axios.put(`${BASE_URL}/api/Contabilidad_Convenio/ActuMedic`, medicoForm);
       }
       await buscarMedicos();
       setDialogOpen(false);
@@ -249,7 +252,7 @@ const Convenio = () => {
     setError('');
     setLoading(true);
     try {
-      await axios.delete('https://localhost:7146/api/Contabilidad_Convenio/DelMedic', {
+      await axios.delete(`${BASE_URL}/api/Contabilidad_Convenio/DelMedic`, {
         params: {
           docum,
           idmedico: user.emp_codigo,

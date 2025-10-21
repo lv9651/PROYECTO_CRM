@@ -24,6 +24,7 @@ const moduleConfig = {
   ,'/PagoMedico': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'PagoMedico'}
    ,'/ClubQFModule': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'Club QF'}
 ,'/RecibosValidados': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'Validar Pagos'}
+,'/PlantillaGenerador': { icon: <Business fontSize="large" />, color: '#8E44AD', title: 'Reporte Contable'}
 };
 
 const Dashboard = () => {

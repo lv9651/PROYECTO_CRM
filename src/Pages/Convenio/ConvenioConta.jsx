@@ -19,7 +19,7 @@ import {
 import axios from 'axios';
 import dayjs from 'dayjs';
 import { useAuth } from '../../Compo/AuthContext';
-
+import { BASE_URL } from '../../Conf/config';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 
@@ -49,7 +49,7 @@ const Contabilidad = () => {
       const id = user?.perfilCodigo === 'CONTABILIDAD' ? 0 : user?.emp_codigo;
 
       const response = await axios.get(
-        `https://localhost:7146/api/Contabilidad_Convenio/representante/${id}`,
+        `${BASE_URL}/api/Contabilidad_Convenio/representante/${id}`,
         {
           params: {
             fechaDesde,

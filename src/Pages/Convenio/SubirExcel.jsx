@@ -8,7 +8,7 @@ import {
 import { Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
-
+import { BASE_URL } from '../../Conf/config'
 const SubirExcel = ({ onFileUploaded }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -67,7 +67,7 @@ const SubirExcel = ({ onFileUploaded }) => {
     formData.append('idrepresentante', user.emp_codigo);
 
     try {
-      const resp = await axios.post('https://localhost:7146/api/Contabilidad_Convenio/SubirExcel', formData, {
+      const resp = await axios.post(`${BASE_URL}/api/Contabilidad_Convenio/SubirExcel`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       console.log('Respuesta de la API:', resp.data);
@@ -92,7 +92,7 @@ const SubirExcel = ({ onFileUploaded }) => {
     setLoading(true);
 
     try {
-      const response = await axios.get('https://localhost:7146/api/Contabilidad_Convenio/representante/' + user.emp_codigo, {
+      const response = await axios.get(`${BASE_URL}/api/Contabilidad_Convenio/representante/` + user.emp_codigo, {
         params: { fechaDesde: fechaDesde, fechaHasta: fechaHasta },
       });
       setPagos(response.data);
@@ -150,7 +150,7 @@ const SubirExcel = ({ onFileUploaded }) => {
 
     try {
       const response = await axios.put(
-        `https://localhost:7146/api/Contabilidad_Convenio/ActrepresentanteCarg/${pago.id}`,
+        `${BASE_URL}/api/Contabilidad_Convenio/ActrepresentanteCarg/${pago.id}`,
         pago
       );
       console.log('Pago actualizado:', response.data);
