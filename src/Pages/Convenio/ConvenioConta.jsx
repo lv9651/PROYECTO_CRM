@@ -25,36 +25,50 @@ import { saveAs } from 'file-saver';
 
 const Contabilidad = () => {
   const { user } = useAuth();
+  const currentYear = new Date().getFullYear();
 
-  const [fechaDesde, setFechaDesde] = useState('');
-  const [fechaHasta, setFechaHasta] = useState('');
+  const [mes, setMes] = useState('');
+  const [anio, setAnio] = useState(currentYear);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [resultados, setResultados] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [archivo, setArchivo] = useState(null);
+
+  const meses = [
+    { nombre: 'Enero', valor: 1 },
+    { nombre: 'Febrero', valor: 2 },
+    { nombre: 'Marzo', valor: 3 },
+    { nombre: 'Abril', valor: 4 },
+    { nombre: 'Mayo', valor: 5 },
+    { nombre: 'Junio', valor: 6 },
+    { nombre: 'Julio', valor: 7 },
+    { nombre: 'Agosto', valor: 8 },
+    { nombre: 'Septiembre', valor: 9 },
+    { nombre: 'Octubre', valor: 10 },
+    { nombre: 'Noviembre', valor: 11 },
+    { nombre: 'Diciembre', valor: 12 }
+  ];
 
   const buscarMedicosPorFecha = async () => {
     setError('');
     setResultados([]);
     setSearchTerm('');
 
-    if (!fechaDesde || !fechaHasta) {
-      setError('Debes seleccionar ambas fechas.');
+    if (!mes || !anio) {
+      setError('Debes seleccionar mes y año.');
       return;
     }
 
     setLoading(true);
 
     try {
-      const id = user?.perfilCodigo === 'CONTABILIDAD' ? 0 : user?.emp_codigo;
+      const idRepresentante = user?.perfilCodigo === 'CONTABILIDAD' ? 0 : user?.emp_codigo;
 
       const response = await axios.get(
-        `${BASE_URL}/api/Contabilidad_Convenio/representante/${id}`,
+        `${BASE_URL}/api/Contabilidad_Convenio/representante/${idRepresentante}`,
         {
-          params: {
-            fechaDesde,
-            fechaHasta
-          }
+          params: { mes, anio }
         }
       );
 
@@ -77,7 +91,6 @@ const Contabilidad = () => {
       return;
     }
 
-    // Mapear datos para que sean más legibles en Excel
     const datosExcel = resultadosFiltrados.map(item => ({
       Id: item.id,
       TipoPago: item.tipoPago,
@@ -120,36 +133,77 @@ const Contabilidad = () => {
     saveAs(data, 'PagosRepresentante.xlsx');
   };
 
+  const subirExcel = async () => {
+    if (!archivo) {
+      alert("Selecciona un archivo Excel.");
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('archivo', archivo);
+      formData.append('usuario', user?.emp_codigo || 'SYSTEM');
+
+      const response = await axios.post(
+        `${BASE_URL}/api/Contabilidad_Convenio/subir-excelConta`,
+        formData,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
+
+      alert(`Se actualizaron ${response.data.cantidad} registros.`);
+      setArchivo(null);
+    } catch (err) {
+      console.error(err);
+      setError('Error al subir el archivo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <Container sx={{ py: 4 }}>
       <Card elevation={4}>
         <CardContent>
           <Typography variant="h5" gutterBottom>
-            Revisión de Médicos por Rango de Fecha
+            Revisión de Médicos por Mes y Año
           </Typography>
 
           <Grid container spacing={2} sx={{ mb: 2 }}>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
-                label="Desde"
-                type="date"
+                label="Mes"
+                select
                 fullWidth
                 size="small"
-                InputLabelProps={{ shrink: true }}
-                value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-              />
+                SelectProps={{ native: true }}
+                value={mes}
+                onChange={(e) => setMes(e.target.value)}
+              >
+                <option value="">Selecciona Mes</option>
+                {meses.map(m => (
+                  <option key={m.valor} value={m.valor}>{m.nombre}</option>
+                ))}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <TextField
-                label="Hasta"
-                type="date"
+                label="Año"
+                select
                 fullWidth
                 size="small"
-                InputLabelProps={{ shrink: true }}
-                value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
-              />
+                SelectProps={{ native: true }}
+                value={anio}
+                onChange={(e) => setAnio(e.target.value)}
+              >
+                <option value="">Selecciona Año</option>
+                {Array.from({ length: 10 }, (_, i) => {
+                  const year = currentYear - i;
+                  return <option key={year} value={year}>{year}</option>;
+                })}
+              </TextField>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <Button
@@ -176,6 +230,26 @@ const Contabilidad = () => {
             )}
           </Grid>
 
+          <Grid container spacing={2} sx={{ mb: 2 }}>
+            <Grid item xs={12} sm={6} md={6}>
+              <input
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={(e) => setArchivo(e.target.files[0])}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+              <Button
+                variant="contained"
+                fullWidth
+                onClick={subirExcel}
+                disabled={loading || !archivo}
+              >
+                {loading ? <CircularProgress size={24} /> : 'Actualizar Pagos'}
+              </Button>
+            </Grid>
+          </Grid>
+
           {error && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {error}
@@ -195,7 +269,7 @@ const Contabilidad = () => {
                 placeholder="Filtra por representante"
               />
               <Paper elevation={2} sx={{ maxHeight: 400, overflow: 'auto' }}>
-                <Table stickyHeader size="small" >
+                <Table stickyHeader size="small">
                   <TableHead>
                     <TableRow>
                       <TableCell>Id</TableCell>
@@ -230,50 +304,55 @@ const Contabilidad = () => {
                       <TableCell>Fecha Carga</TableCell>
                     </TableRow>
                   </TableHead>
-                  <TableBody>
-                    {resultadosFiltrados.length > 0 ? (
-                      resultadosFiltrados.map((m, i) => (
-                        <TableRow key={i}>
-                          <TableCell>{m.id}</TableCell>
-                          <TableCell>{m.tipoPago}</TableCell>
-                          <TableCell>{m.representante}</TableCell>
-                          <TableCell>{m.lugar}</TableCell>
-                          <TableCell>{m.nombre}</TableCell>
-                          <TableCell>{m.tipoDocumento}</TableCell>
-                          <TableCell>{m.docIdentidad}</TableCell>
-                          <TableCell>{m.ruc}</TableCell>
-                          <TableCell>{m.banco}</TableCell>
-                          <TableCell>{m.cuentaCorriente}</TableCell>
-                          <TableCell>{m.cuentaInterbancaria}</TableCell>
-                          <TableCell>{m.unidadFm}</TableCell>
-                          <TableCell>{m.ventas}</TableCell>
-                          <TableCell>{m.pagoBruto}</TableCell>
-                          <TableCell>{m.pagoDespues}</TableCell>
-                          <TableCell>{m.descuento}</TableCell>
-                          <TableCell>{m.renta}</TableCell>
-                          <TableCell>{m.pagoDespuesNeto}</TableCell>
-                          <TableCell>{m.fechaRegistro ? dayjs(m.fechaRegistro).format('YYYY-MM-DD') : ''}</TableCell>
-                          <TableCell>{m.fechaEmision ? dayjs(m.fechaEmision).format('YYYY-MM-DD') : ''}</TableCell>
-                          <TableCell>{m.documento}</TableCell>
-                          <TableCell>{m.serie}</TableCell>
-                          <TableCell>{m.numero}</TableCell>
-                          <TableCell>{m.importe}</TableCell>
-                          <TableCell>{m.detraccion}</TableCell>
-                          <TableCell>{m.rentaFinal}</TableCell>
-                          <TableCell>{m.totalAPagar}</TableCell>
-                          <TableCell>{m.descripcion}</TableCell>
-                          <TableCell>{m.observaciones}</TableCell>
-                          <TableCell>{m.fechaCarga ? dayjs(m.fechaCarga).format('YYYY-MM-DD') : ''}</TableCell>
-                        </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={31} align="center">
-                          No se encontraron resultados para el filtro.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
+               <TableBody>
+  {resultadosFiltrados.length > 0 ? (
+    resultadosFiltrados.map((m, i) => (
+      <TableRow
+        key={i}
+        sx={{
+          backgroundColor: m.estado === 1 ? 'rgba(255, 235, 59, 0.3)' : 'inherit'
+        }}
+      >
+        <TableCell>{m.id}</TableCell>
+        <TableCell>{m.tipoPago}</TableCell>
+        <TableCell>{m.representante}</TableCell>
+        <TableCell>{m.lugar}</TableCell>
+        <TableCell>{m.nombre}</TableCell>
+        <TableCell>{m.tipoDocumento}</TableCell>
+        <TableCell>{m.docIdentidad}</TableCell>
+        <TableCell>{m.ruc}</TableCell>
+        <TableCell>{m.banco}</TableCell>
+        <TableCell>{m.cuentaCorriente}</TableCell>
+        <TableCell>{m.cuentaInterbancaria}</TableCell>
+        <TableCell>{m.unidadFm}</TableCell>
+        <TableCell>{m.ventas}</TableCell>
+        <TableCell>{m.pagoBruto}</TableCell>
+        <TableCell>{m.pagoDespues}</TableCell>
+        <TableCell>{m.descuento}</TableCell>
+        <TableCell>{m.renta}</TableCell>
+        <TableCell>{m.pagoDespuesNeto}</TableCell>
+        <TableCell>{m.fechaRegistro ? dayjs(m.fechaRegistro).format('YYYY-MM-DD') : ''}</TableCell>
+        <TableCell>{m.fechaEmision ? dayjs(m.fechaEmision).format('YYYY-MM-DD') : ''}</TableCell>
+        <TableCell>{m.documento}</TableCell>
+        <TableCell>{m.serie}</TableCell>
+        <TableCell>{m.numero}</TableCell>
+        <TableCell>{m.importe}</TableCell>
+        <TableCell>{m.detraccion}</TableCell>
+        <TableCell>{m.rentaFinal}</TableCell>
+        <TableCell>{m.totalAPagar}</TableCell>
+        <TableCell>{m.descripcion}</TableCell>
+        <TableCell>{m.observaciones}</TableCell>
+        <TableCell>{m.fechaCarga ? dayjs(m.fechaCarga).format('YYYY-MM-DD') : ''}</TableCell>
+      </TableRow>
+    ))
+  ) : (
+    <TableRow>
+      <TableCell colSpan={31} align="center">
+        No se encontraron resultados para el filtro.
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
                 </Table>
               </Paper>
             </>

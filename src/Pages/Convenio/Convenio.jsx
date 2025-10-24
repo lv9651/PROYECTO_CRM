@@ -393,112 +393,182 @@ const Convenio = () => {
       {/* Diálogo */}
       <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>{dialogMode === 'add' ? 'Agregar Médico' : 'Editar Médico'}</DialogTitle>
-        <DialogContent>
-          <Box component="form" sx={{ mt: 1, display: 'grid', gap: 2 }}>
-            <FormControl size="small" fullWidth>
-              <InputLabel id="docum-form-label">Docum</InputLabel>
-              <Select
-                labelId="docum-form-label"
-                value={medicoForm.docum}
-                onChange={e => setMedicoForm(prev => ({ ...prev, docum: e.target.value }))}
-                label="Docum"
-              >
-                <MenuItem value="SIN RXH">SIN RXH</MenuItem>
-                <MenuItem value="CON RXH">CON RXH</MenuItem>
-                <MenuItem value="AMBOS">AMBOS</MenuItem>
-              </Select>
-            </FormControl>
+     <DialogContent>
+  <Box component="form" sx={{ mt: 1, display: 'grid', gap: 2 }}>
+    {/* DOCUM */}
+    <FormControl size="small" fullWidth>
+      <InputLabel id="docum-form-label">Docum</InputLabel>
+      <Select
+        labelId="docum-form-label"
+        value={medicoForm.docum}
+        onChange={e => setMedicoForm(prev => ({ ...prev, docum: e.target.value }))}
+        label="Docum"
+      >
+        <MenuItem value="SIN RXH">SIN RXH</MenuItem>
+        <MenuItem value="CON RXH">CON RXH</MenuItem>
+        <MenuItem value="AMBOS">AMBOS</MenuItem>
+      </Select>
+    </FormControl>
 
-            <TextField
-              size="small"
-              label="Documento de Identidad"
-              fullWidth
-              value={medicoForm.doc_Identidad}
-              onChange={e => setMedicoForm(prev => ({ ...prev, doc_Identidad: e.target.value }))}
-            />
-            <TextField
-              size="small"
-              label="Nombre"
-              fullWidth
-              value={medicoForm.nombre}
-              onChange={e => setMedicoForm(prev => ({ ...prev, nombre: e.target.value }))}
-            />
+    {/* Tipo de documento */}
+    <FormControl size="small" fullWidth>
+      <InputLabel id="tipo-doc-label">Tipo Documento</InputLabel>
+      <Select
+        labelId="tipo-doc-label"
+        value={medicoForm.tipo_Documento}
+        onChange={e => setMedicoForm(prev => ({ ...prev, tipo_Documento: e.target.value }))}
+        label="Tipo Documento"
+      >
+        <MenuItem value="DNI">DNI</MenuItem>
+        <MenuItem value="CARNET">Carnet de Extranjería</MenuItem>
+        <MenuItem value="PASAPORTE">Pasaporte</MenuItem>
+      </Select>
+    </FormControl>
 
-            {dialogMode === 'edit' && (
-              <TextField
-                size="small"
-                label="Representante"
-                fullWidth
-                value={medicoForm.representante}
-                onChange={e => setMedicoForm(prev => ({ ...prev, representante: e.target.value }))}
-              />
-            )}
+    {/* Documento de identidad con validación dinámica */}
+    <TextField
+      size="small"
+      label="Documento de Identidad"
+      fullWidth
+      value={medicoForm.doc_Identidad}
+      onChange={e => {
+        const val = e.target.value.toUpperCase();
+        const tipo = medicoForm.tipo_Documento;
+        let regex;
 
-            <TextField
-              size="small"
-              label="Lugar"
-              fullWidth
-              value={medicoForm.lugar}
-              onChange={e => setMedicoForm(prev => ({ ...prev, lugar: e.target.value }))}
-            />
+        if (tipo === 'DNI') regex = /^[0-9]{0,8}$/;
+        else if (tipo === 'CARNET') regex = /^[A-Z0-9]{0,12}$/;
+        else if (tipo === 'PASAPORTE') regex = /^[A-Z0-9]{0,9}$/;
+        else regex = /.*/;
 
-            <FormControl size="small" fullWidth>
-              <InputLabel id="tipo-doc-label">Tipo Documento</InputLabel>
-              <Select
-                labelId="tipo-doc-label"
-                value={medicoForm.tipo_Documento}
-                onChange={e => setMedicoForm(prev => ({ ...prev, tipo_Documento: e.target.value }))}
-                label="Tipo Documento"
-              >
-                <MenuItem value={1}>DNI</MenuItem>
-                <MenuItem value={3}>Carnet de Extranjería</MenuItem>
-              </Select>
-            </FormControl>
+        if (regex.test(val)) {
+          setMedicoForm(prev => ({ ...prev, doc_Identidad: val }));
+        }
+      }}
+      helperText={
+        medicoForm.tipo_Documento === 'DNI'
+          ? 'Debe tener exactamente 8 dígitos numéricos'
+          : medicoForm.tipo_Documento === 'CARNET'
+          ? 'Debe tener de 9 a 12 caracteres alfanuméricos'
+          : medicoForm.tipo_Documento === 'PASAPORTE'
+          ? 'Debe tener de 8 a 9 caracteres alfanuméricos'
+          : ''
+      }
+    />
 
-            <TextField
-              size="small"
-              label="RUC"
-              fullWidth
-              value={medicoForm.ruc}
-              onChange={e => setMedicoForm(prev => ({ ...prev, ruc: e.target.value }))}
-            />
+    {/* Nombre */}
+    <TextField
+      size="small"
+      label="Nombre"
+      fullWidth
+      value={medicoForm.nombre}
+      onChange={e => setMedicoForm(prev => ({ ...prev, nombre: e.target.value }))}
+    />
 
-            <FormControl size="small" fullWidth>
-              <InputLabel id="banco-label">Banco</InputLabel>
-              <Select
-                labelId="banco-label"
-                value={medicoForm.banco}
-                onChange={e => setMedicoForm(prev => ({ ...prev, banco: e.target.value }))}
-                label="Banco"
-              >
-                <MenuItem value="BANBIF">BANBIF</MenuItem>
-                <MenuItem value="BANCO DE LA NACION">BANCO DE LA NACION</MenuItem>
-                <MenuItem value="BBVA">BBVA</MenuItem>
-                <MenuItem value="BCP">BCP</MenuItem>
-                <MenuItem value="CAJA PIURA">CAJA PIURA</MenuItem>
-                <MenuItem value="FALABELLA">FALABELLA</MenuItem>
-                <MenuItem value="INTERBANK">INTERBANK</MenuItem>
-                <MenuItem value="SCOTIABANK">SCOTIABANK</MenuItem>
-              </Select>
-            </FormControl>
+    {/* Representante (solo en modo edición) */}
+    {dialogMode === 'edit' && (
+      <TextField
+        size="small"
+        label="Representante"
+        fullWidth
+        value={medicoForm.representante}
+        onChange={e => setMedicoForm(prev => ({ ...prev, representante: e.target.value }))}
+      />
+    )}
 
-            <TextField
-              size="small"
-              label="Cuenta Corriente"
-              fullWidth
-              value={medicoForm.cuenta_Corriente}
-              onChange={e => setMedicoForm(prev => ({ ...prev, cuenta_Corriente: e.target.value }))}
-            />
+    {/* Lugar */}
+    <TextField
+      size="small"
+      label="Lugar"
+      fullWidth
+      value={medicoForm.lugar}
+      onChange={e => setMedicoForm(prev => ({ ...prev, lugar: e.target.value }))}
+    />
 
-            <TextField
-              size="small"
-              label="Cuenta Interbancaria"
-              fullWidth
-              value={medicoForm.cuenta_Interbancaria}
-              onChange={e => setMedicoForm(prev => ({ ...prev, cuenta_Interbancaria: e.target.value }))}
-            />
-          </Box>
-        </DialogContent>
+    {/* RUC */}
+    <TextField
+      size="small"
+      label="RUC"
+      fullWidth
+      value={medicoForm.ruc}
+      onChange={e => setMedicoForm(prev => ({ ...prev, ruc: e.target.value }))}
+    />
+
+    {/* Banco */}
+    <FormControl size="small" fullWidth>
+      <InputLabel id="banco-label">Banco</InputLabel>
+      <Select
+        labelId="banco-label"
+        value={medicoForm.banco}
+        onChange={e => setMedicoForm(prev => ({ ...prev, banco: e.target.value }))}
+        label="Banco"
+      >
+        <MenuItem value="BANBIF">BANBIF</MenuItem>
+        <MenuItem value="BANCO DE LA NACION">BANCO DE LA NACION</MenuItem>
+        <MenuItem value="BBVA">BBVA</MenuItem>
+        <MenuItem value="BCP">BCP</MenuItem>
+        <MenuItem value="CAJA PIURA">CAJA PIURA</MenuItem>
+        <MenuItem value="FALABELLA">FALABELLA</MenuItem>
+        <MenuItem value="INTERBANK">INTERBANK</MenuItem>
+        <MenuItem value="SCOTIABANK">SCOTIABANK</MenuItem>
+      </Select>
+    </FormControl>
+
+    {/* Cuenta Corriente con validación por banco */}
+    <TextField
+      size="small"
+      label="Cuenta Corriente"
+      fullWidth
+      value={medicoForm.cuenta_Corriente}
+      onChange={e => {
+        const val = e.target.value.replace(/\D/g, ''); // solo números
+        const banco = medicoForm.banco;
+        let max = 20;
+
+        if (banco === 'BANCO DE LA NACION') max = 14;
+        else if (['BBVA', 'BCP', 'FALABELLA', 'INTERBANK'].includes(banco)) max = 13;
+        else if (banco === 'CAJA PIURA') max = 14;
+        else if (banco === 'SCOTIABANK') max = 13;
+
+        if (val.length <= max) {
+          setMedicoForm(prev => ({ ...prev, cuenta_Corriente: val }));
+        }
+      }}
+      helperText={
+        medicoForm.banco === 'BANCO DE LA NACION'
+          ? 'Debe tener 14 dígitos'
+          : medicoForm.banco === 'BBVA'
+          ? 'Debe tener aprox. 13 dígitos'
+          : medicoForm.banco === 'BCP'
+          ? 'Debe tener 13 dígitos'
+          : medicoForm.banco === 'CAJA PIURA'
+          ? 'Debe tener 14 dígitos aprox.'
+          : medicoForm.banco === 'FALABELLA'
+          ? 'Debe tener 13 dígitos'
+          : medicoForm.banco === 'INTERBANK'
+          ? 'Debe tener 13 dígitos'
+          : medicoForm.banco === 'SCOTIABANK'
+          ? 'Debe tener entre 11 y 13 dígitos'
+          : ''
+      }
+    />
+
+    {/* Cuenta interbancaria (CCI) */}
+    <TextField
+      size="small"
+      label="Cuenta Interbancaria (CCI)"
+      fullWidth
+      value={medicoForm.cuenta_Interbancaria}
+      onChange={e => {
+        const val = e.target.value.replace(/\D/g, ''); // solo números
+        if (val.length <= 20) {
+          setMedicoForm(prev => ({ ...prev, cuenta_Interbancaria: val }));
+        }
+      }}
+      helperText="Debe tener 20 dígitos numéricos"
+    />
+  </Box>
+</DialogContent>
         <DialogActions>
           <Button onClick={() => setDialogOpen(false)}>Cancelar</Button>
           <Button onClick={guardarMedico} variant="contained" color="primary">Guardar</Button>
