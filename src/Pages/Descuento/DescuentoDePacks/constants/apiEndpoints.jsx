@@ -4,5 +4,6 @@ export const API_ENDPOINTS = {
   PRODUCTOS: '/api/Descuento/BuscarPorNombrepack/',
   HISTORIAL: '/api/Descuento/HistorialPacks',
   LISTAS_PRECIO: '/api/Descuento/listas-precios',
-  GUARDAR_PACK: '/api/Descuento/Insertar-Descu'
+  GUARDAR_PACK: '/api/Descuento/Insertar-Descu',
+    ACTUALIZAR_PACK: '/api/Descuento/Insertar-Descu'  // 👈 AGREGA ESTO
 };

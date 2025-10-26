@@ -60,45 +60,9 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
 
   return (
     <Paper sx={{ padding: 3 }}>
-      <Typography variant="h6" gutterBottom>Datos completos recibidos (debug)</Typography>
-      <pre style={{ maxHeight: 300, overflow: 'auto', background: '#f0f0f0', padding: 10 }}>
-        {datosComoString}
-      </pre>
+     
 
-      <Typography variant="h5" gutterBottom>Resumen de Mantenimiento</Typography>
-
-      <Typography><strong>Descripción:</strong> {descripcion}</Typography>
-      <Typography><strong>Fecha Inicio:</strong> {new Date(fechaInicio).toLocaleDateString()}</Typography>
-      <Typography><strong>Fecha Fin:</strong> {new Date(fechaFin).toLocaleDateString()}</Typography>
-
-      <Typography><strong>Descuento Para:</strong> {descuentoPara}</Typography>
-      {descuentoPara === 'Proveedor' && proveedorSeleccionado && (
-        <Typography>
-          <strong>Proveedor:</strong> {proveedorSeleccionado.razonSocial} (RUC: {proveedorSeleccionado.ruc})
-        </Typography>
-      )}
-      {descuentoPara === 'Laboratorio' && laboratorioSeleccionado && (
-        <Typography>
-          <strong>Laboratorio:</strong> {laboratorioSeleccionado.descripcion}
-        </Typography>
-      )}
-
-      <Typography sx={{ mt: 2 }}>
-        <strong>Canales seleccionados:</strong> {canalesNombres}
-      </Typography>
-      <Typography>
-        <strong>Listas de precio seleccionadas:</strong> {listasNombres}
-      </Typography>
-
-      <Typography sx={{ mt: 2 }}>
-        <strong>Porcentaje QFLab:</strong> {porcentajeQFLab}%
-      </Typography>
-      <Typography>
-        <strong>Porcentaje ProvLab:</strong> {porcentajeProvLab}%
-      </Typography>
-
-      <Divider sx={{ my: 3 }} />
-
+      
       <Typography variant="h6" gutterBottom>Productos Seleccionados</Typography>
       <Table size="small" sx={{ mb: 3 }}>
         <TableHead>

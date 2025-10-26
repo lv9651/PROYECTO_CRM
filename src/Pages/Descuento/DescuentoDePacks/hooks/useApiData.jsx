@@ -45,8 +45,9 @@ export const useApiData = () => {
   const fetchListasPrecio = useCallback(() => 
     fetchData(API_ENDPOINTS.LISTAS_PRECIO, 'listasPrecio'), [fetchData]);
 
-  const fetchHistorial = useCallback(() => 
-    fetchData(API_ENDPOINTS.HISTORIAL, 'historial'), [fetchData]);
+const fetchHistorial = useCallback((tipoDescuento = 2) => 
+  fetchData(API_ENDPOINTS.HISTORIAL, 'historial', { tipoDescuento }), 
+[fetchData]);
 
   const fetchProductos = useCallback(async (searchTerm) => {
     if (!searchTerm || searchTerm.trim().length < PACK_CONFIG.MIN_SEARCH_LENGTH) {
@@ -56,23 +57,25 @@ export const useApiData = () => {
     return fetchData(`${API_ENDPOINTS.PRODUCTOS}${searchTerm}`, 'productos');
   }, [fetchData]);
 
-  const savePack = useCallback(async (packData) => {
-    setLoading(prev => ({ ...prev, saving: true }));
-    try {
-      const response = await axios.post(
-        `${BASE_URL}${API_ENDPOINTS.GUARDAR_PACK}`, 
-        packData, 
-        { headers: { 'Content-Type': 'application/json' } }
-      );
-      return response.data;
-    } catch (error) {
-      console.error('Error al guardar pack:', error);
-      throw error;
-    } finally {
-      setLoading(prev => ({ ...prev, saving: false }));
-    }
-  }, []);
+const savePack = useCallback(async (packData) => {
+  setLoading(prev => ({ ...prev, saving: true }));
+  try {
+    const isUpdate = packData.iddescuento && packData.iddescuento > 0;
 
+    const response = await axios.post(
+      `${BASE_URL}${isUpdate ? API_ENDPOINTS.ACTUALIZAR_PACK : API_ENDPOINTS.GUARDAR_PACK}`,
+      packData,
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error('Error al guardar o actualizar pack:', error);
+    throw error;
+  } finally {
+    setLoading(prev => ({ ...prev, saving: false }));
+  }
+}, []);
   return {
     apiData,
     loading,

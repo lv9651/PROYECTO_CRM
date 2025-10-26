@@ -14,7 +14,7 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
     }
 
     const packData = {
-      iddescuento: 0,
+     iddescuento: packState.idDescuento || 0,
       descripcion: packState.packName,
       fechainicio: dateUtils.formatDateForAPI(packState.fechaDesde),
       fechafin: dateUtils.formatDateForAPI(packState.fechaHasta),
@@ -47,6 +47,7 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
     const sucursales = JSON.parse(packData.idsucursal);
     const canales = JSON.parse(packData.idcanalventa);
     const listasPrecio = JSON.parse(packData.idlistaprecio);
+    
 
     const descuentoPorcentaje = productos.summary.descuento * 100;
 
@@ -56,7 +57,8 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       fechaHasta: packData.fechaFin.split('T')[0],
       descuento: descuentoPorcentaje,
       price: productos.summary.total,
-      packCode: packData.idProductoPack
+      packCode: packData.idProductoPack,
+       idDescuento: packData.idDescuento
     });
 
     const productosFormateados = productos.items.map(item => ({
