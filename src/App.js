@@ -26,6 +26,7 @@ import PagoMedico from './Pages/PagoMedico/PagoMedico';
 import ClubQFModule from './Pages/ClubQF/ClubQFModule';
 import RecibosValidados from './Pages/PagoMedico/RecibosValidados';
 import Contabilidad from './Pages/Convenio/ConvenioConta'; 
+import Oferta from './Pages/Descuento/Ofertas/Oferta'; 
 
 import { AuthProvider, useAuth } from './Compo/AuthContext';
 
@@ -73,6 +74,10 @@ const AppRoutes = () => {
 
             <Route path="/ConvenioConta" element={
             <PrivateRoute><Contabilidad /></PrivateRoute>
+          } />
+
+            <Route path="/Oferta" element={
+            <PrivateRoute><Oferta /></PrivateRoute>
           } />
           <Route path="/BI" element={
             <PrivateRoute><BI /></PrivateRoute>

@@ -13,6 +13,7 @@ import ListarDescuento from './ListarDescuento';
 import Mantenimiento from './Mantenimiento';
 import PackPromociones from './PackPromocionesModule';
 import PackPromociones2 from './DescuentoDePacks/index';
+import Ofertas from './Ofertas/Oferta';
 const StyledListItem = styled(ListItem)(({ theme }) => ({
   '&.Mui-selected, &.Mui-selected:hover': {
     backgroundColor: theme.palette.primary.light,
@@ -32,9 +33,10 @@ const descuentoMenu = [
     subItems: [
       { name: "Listar", icon: <FormatListBulleted />, tipo: "Vista", component: <ListarDescuento /> },
       { name: "Mantenimiento", icon: <Build />, tipo: "Vista", component: <Mantenimiento />},
-      { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },
+      { name: "Productos Obsequio", icon: <CardGiftcard />, tipo: "Vista", component: <Ofertas/> },
       { name: "Pack de promociones", icon: <ShoppingCart />, tipo: "Vista", component:  <PackPromociones2 />  },
-      { name: "Productos Obsequio", icon: <CardGiftcard />, tipo: "Vista", component: <div>Productos Obsequio</div> }
+      { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },
+
     ]
   }
 ];

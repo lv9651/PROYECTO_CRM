@@ -145,7 +145,7 @@ const ListarDescuento = () => {
         idProductoPack: selectedPack.idProductoPack || 0,
         idtipodescuento: 1,
         todocliente: true,
-        usuariomanipula: user?.id?.toString() || "1",
+        usuariomanipula: user?.emp_codigo,
         idcliente: "",
         idtipoproducto: "",
         excluiridproducto: "",
