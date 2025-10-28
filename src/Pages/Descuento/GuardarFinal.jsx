@@ -86,12 +86,12 @@ export default function GuardarFinal({ datos, canalesDisponibles = [], listasDis
               <TableCell align="right">{prod.vvf?.toFixed(2) ?? '0.00'}</TableCell>
               <TableCell>{prod.producto.trim()}</TableCell>
               <TableCell>{prod.lista}</TableCell>
-              <TableCell>{prod.PVV}</TableCell>
+              <TableCell>{prod.precio}</TableCell>
               <TableCell>{prod.descq}</TableCell>
               <TableCell>{prod.descprov}</TableCell>
               <TableCell>
                 {(() => {
-                  const precio = parseFloat(prod.PVV) || 0;
+                  const precio = parseFloat(prod.precio) || 0;
                   const qf = parseFloat(prod.descq) || 0;
                   const prov = parseFloat(prod.descprov) || 0;
                   const total = precio - (precio * ((qf + prov) / 100));

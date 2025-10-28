@@ -80,33 +80,67 @@ export default function MantenimientoWizard() {
   console.log(datosCompletos);
 
   const handleNext = () => {
-    if (step === 1) {
-      // Combinar paso 0 y paso 1 en datosCompletos
-const listasConDescripcion = listas.map(id => {
-  const lista = listasDisponibles.find(l => l.idListaPrecio === Number(id));
-  return {
-    idListaPrecio: id,
-    descripcion: lista?.descripcion || ''
-  };
-});
-
-      setDatosCompletos({
-        descripcion,
-        fechaInicio: fechaInicio.toDate(),  // Convierte dayjs a Date
-        fechaFin: fechaFin.toDate(),
-        canales,
-        listass: listasConDescripcion,
-        descuentoPara,
-        proveedorSeleccionado,
-        laboratorioSeleccionado,
-        usuariomanipula: user?.emp_codigo || 0,
-        ...datosConfigurarDescuento
-        
-      });
+  if (step === 0) {
+    // Validaciones del paso 0
+    if (!descripcion.trim()) {
+      alert("La descripción es obligatoria");
+      return;
     }
-    
-    setStep(s => s + 1);
-  };
+    if (!fechaInicio || !fechaFin) {
+      alert("Debes seleccionar fechas de inicio y fin");
+      return;
+    }
+    if (canales.length === 0) {
+      alert("Selecciona al menos un canal de venta");
+      return;
+    }
+    if (listas.length === 0) {
+      alert("Selecciona al menos una lista de precios");
+      return;
+    }
+    if (descuentoPara === "Proveedor" && !proveedorSeleccionado) {
+      alert("Selecciona un proveedor");
+      return;
+    }
+    if (descuentoPara === "Laboratorio" && !laboratorioSeleccionado) {
+      alert("Selecciona un laboratorio");
+      return;
+    }
+  }
+
+  if (step === 1) {
+    // Validaciones del paso 1 (descuentos)
+    if (!datosConfigurarDescuento || !datosConfigurarDescuento.productosSeleccionados?.length) {
+      alert("Debes agregar al menos un producto con descuentos");
+      return;
+    }
+
+    // Combinar paso 0 y paso 1
+    const listasConDescripcion = listas.map(id => {
+      const lista = listasDisponibles.find(l => l.idListaPrecio === Number(id));
+      return {
+        idListaPrecio: id,
+        descripcion: lista?.descripcion || ''
+      };
+    });
+
+    setDatosCompletos({
+      descripcion,
+      fechaInicio: fechaInicio.toDate(),
+      fechaFin: fechaFin.toDate(),
+      canales,
+      listass: listasConDescripcion,
+      descuentoPara,
+      proveedorSeleccionado,
+      laboratorioSeleccionado,
+      usuariomanipula: user?.emp_codigo || 0,
+      ...datosConfigurarDescuento
+    });
+  }
+
+  // Avanza al siguiente paso si pasa las validaciones
+  setStep(s => s + 1);
+};
 
   const handleBack = () => {
     setStep(s => s - 1);
@@ -145,19 +179,21 @@ const listasConDescripcion = listas.map(id => {
   type="date"
   label="Fecha Inicio"
   name="fechainicio"
-  value={fechaInicio.format('YYYY-MM-DD')}
-  onChange={(e) => setFechaInicio(e.target.value)}
-  renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+  value={dayjs(fechaInicio).isValid() ? dayjs(fechaInicio).format('YYYY-MM-DD') : ''}
+  onChange={(e) => setFechaInicio(dayjs(e.target.value))}
+  fullWidth
+  margin="normal"
   InputLabelProps={{ shrink: true }}
 />
 
-          <TextField
+<TextField
   type="date"
   label="Fecha Fin"
-  name="Fechfin"
-  value={fechaFin.format('YYYY-MM-DD')}
-  onChange={(e) => setFechaFin(e.target.value)}
-  renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+  name="fechafin"
+  value={dayjs(fechaFin).isValid() ? dayjs(fechaFin).format('YYYY-MM-DD') : ''}
+  onChange={(e) => setFechaFin(dayjs(e.target.value))}
+  fullWidth
+  margin="normal"
   InputLabelProps={{ shrink: true }}
 />
 
@@ -200,101 +236,104 @@ const listasConDescripcion = listas.map(id => {
             </Grid>
 
    {/* CANALES DE VENTA */}
-<Grid item xs={12} md={3}>
-  <Typography
-    variant="subtitle1"
-    sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
-  >
-    Canales de Venta
-  </Typography>
-  <Paper
-    variant="outlined"
-    sx={{
-      height: 320,
-      overflow: 'auto',
-      borderRadius: 2,
-      boxShadow: 1,
-    }}
-  >
-    <Table stickyHeader size="small">
-      <TableHead>
-        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-          <TableCell padding="checkbox"></TableCell>
-          <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {canalesDisponibles.map(c => (
-          <TableRow
-            key={c.idCanalVenta}
-            hover
-            sx={{
-              '&:hover': { backgroundColor: '#f0f8ff' },
-            }}
-          >
-            <TableCell padding="checkbox">
-              <Checkbox
-                color="primary"
-                checked={canales.includes(c.idCanalVenta)}
-                onChange={() => toggleCanal(c.idCanalVenta)}
-              />
-            </TableCell>
-            <TableCell>{c.descripcion}</TableCell>
+<Grid container spacing={3} style={{ marginTop: 20 }}>
+  <Grid item xs={12} md={6}>
+    {/* Canales de Venta */}
+    <Typography
+      variant="subtitle1"
+      sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
+    >
+      Canales de Venta
+    </Typography>
+    <Paper
+      variant="outlined"
+      sx={{
+        height: 320,
+        overflow: 'auto',
+        borderRadius: 2,
+        boxShadow: 1,
+      }}
+    >
+      <Table stickyHeader size="small">
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableCell padding="checkbox"></TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </Paper>
-</Grid>
-          
-{/* LISTA DE PRECIOS */}
-<Grid item xs={12} md={3}>
-  <Typography
-    variant="subtitle1"
-    sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
-  >
-    Lista de Precios
-  </Typography>
-  <Paper
-    variant="outlined"
-    sx={{
-      height: 320,
-      overflow: 'auto',
-      borderRadius: 2,
-      boxShadow: 1,
-    }}
-  >
-    <Table stickyHeader size="small">
-      <TableHead>
-        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-          <TableCell padding="checkbox"></TableCell>
-          <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
-          <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
-        </TableRow>
-      </TableHead>
-      <TableBody>
-        {listasDisponibles.map(l => (
-          <TableRow
-            key={l.idListaPrecio}
-            hover
-            sx={{
-              '&:hover': { backgroundColor: '#f0f8ff' },
-            }}
-          >
-            <TableCell padding="checkbox">
-              <Checkbox
-                color="primary"
-                checked={listas.includes(l.idListaPrecio)}
-                onChange={() => toggleLista(l.idListaPrecio)}
-              />
-            </TableCell>
-            <TableCell>{l.idListaPrecio}</TableCell>
-            <TableCell>{l.descripcion}</TableCell>
+        </TableHead>
+        <TableBody>
+          {canalesDisponibles.map(c => (
+            <TableRow
+              key={c.idCanalVenta}
+              hover
+              sx={{
+                '&:hover': { backgroundColor: '#f0f8ff' },
+              }}
+            >
+              <TableCell padding="checkbox">
+                <Checkbox
+                  color="primary"
+                  checked={canales.includes(c.idCanalVenta)}
+                  onChange={() => toggleCanal(c.idCanalVenta)}
+                />
+              </TableCell>
+              <TableCell>{c.descripcion}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Paper>
+  </Grid>
+
+  <Grid item xs={12} md={6}>
+    {/* Lista de Precios */}
+    <Typography
+      variant="subtitle1"
+      sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
+    >
+      Lista de Precios
+    </Typography>
+    <Paper
+      variant="outlined"
+      sx={{
+        height: 320,
+        overflow: 'auto',
+        borderRadius: 2,
+        boxShadow: 1,
+      }}
+    >
+      <Table stickyHeader size="small">
+        <TableHead>
+          <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+            <TableCell padding="checkbox"></TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+            <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
           </TableRow>
-        ))}
-      </TableBody>
-    </Table>
-  </Paper>
+        </TableHead>
+        <TableBody>
+          {listasDisponibles.map(l => (
+            <TableRow
+              key={l.idListaPrecio}
+              hover
+              sx={{
+                '&:hover': { backgroundColor: '#f0f8ff' },
+              }}
+            >
+              <TableCell padding="checkbox">
+                <Checkbox
+                  color="primary"
+                  checked={listas.includes(l.idListaPrecio)}
+                  onChange={() => toggleLista(l.idListaPrecio)}
+                />
+              </TableCell>
+              <TableCell>{l.idListaPrecio}</TableCell>
+              <TableCell>{l.descripcion}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </Paper>
+  </Grid>
 </Grid>
           </Grid>
         )}
@@ -367,7 +406,7 @@ const listasConDescripcion = listas.map(id => {
               (datosCompletos.productosSeleccionados || []).map(p => ({
                 idproducto: String(p.idproducto),
                 descripcion: p.producto,
-                descuentoqf: p.descq || 0,
+                descuentoqf: (p.descq/100) || 0,
                 descuentoprov: p.prov || 0
               }))
             ),

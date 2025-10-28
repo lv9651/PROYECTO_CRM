@@ -260,8 +260,9 @@ const ConfigurarDescuentos = ({
   const debounceTimeout = useRef(null);
 
 const getProductId = useCallback((producto) => {
-  // Usar idUnico primero, luego los otros campos
-  return producto.idUnico || producto.id || producto.idproducto || producto.codigoProducto || producto.codigo;
+  // Priorizar codigoProducto para productos del modal
+
+ return producto.codigo || producto.codigoProducto || producto.idproducto || producto.id
 }, []);
 const getApiProductId = useCallback((producto) => {
   // Priorizar los campos que contienen el ID real para la API
@@ -284,62 +285,69 @@ const getDescuentosProducto = useCallback((producto) => {
 }, [porcentajesPorProducto, porcentajesGlobales, getProductId]);
 
   // Manejar selección de producto
- const handleSeleccionarProducto = useCallback(async (producto) => {
-  const productoId = getApiProductId(producto);
+  const handleSeleccionarProducto = useCallback(async (producto) => {
 
-  if (!productoId || !listas?.length) return;
+    
+    const productoId = getApiProductId(producto);
 
-  setProductoSeleccionadoActual(producto);
-  setLoading(prev => ({ ...prev, descuentos: true }));
-  
-  try {
-    const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
-      idProducto: productoId,
-      listas: listas.join('|'),
-    });
+ if (!productoId || !listas?.length) return;
 
-    if (response.data && response.data.length > 0) {
-      const descuentosActuales = getDescuentosProducto(producto);
-
-      const nuevosDescuentos = response.data.map(item => {
-        const totalDescuento = descuentosActuales.qf + descuentosActuales.prov;
-        const precio = parseFloat(item.precio) || 0;
-        const precioFinal = precio - (precio * (totalDescuento / 100));
-
-        return {
-          ...item,
-          idUnico: productoId, // ← AGREGAR idUnico
-          codigo: producto.codigo,
-          idproducto: producto.idproducto,
-          id: producto.id,
-          qf: descuentosActuales.qf,
-          prov: descuentosActuales.prov,
-          total: precioFinal.toFixed(2)
-        };
+    setProductoSeleccionadoActual(producto);
+    setLoading(prev => ({ ...prev, descuentos: true }));
+    
+    try {
+      const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
+        idProducto: productoId,
+        listas: listas.join('|'),
       });
 
-      setDescuentosAplicados(prev => [
-        ...prev.filter(d => d.idUnico !== productoId), // ← FILTRAR POR idUnico
-        ...nuevosDescuentos
-      ]);
+      if (response.data && response.data.length > 0) {
+        const descuentosActuales = getDescuentosProducto(producto);
+
+        const nuevosDescuentos = response.data.map(item => {
+          const totalDescuento = descuentosActuales.qf + descuentosActuales.prov;
+          const precio = parseFloat(item.precio) || 0;
+          const precioFinal = precio - (precio * (totalDescuento / 100));
+
+          return {
+            ...item,
+            codigo: producto.codigo,
+            idproducto: producto.idproducto,
+            id: producto.id,
+            qf: descuentosActuales.qf,
+            prov: descuentosActuales.prov,
+            
+            total: precioFinal.toFixed(2)
+          };
+        });
+
+        setDescuentosAplicados(prev => [
+          ...prev.filter(d => 
+            d.codigo !== producto.codigo && 
+            d.idproducto !== producto.idproducto && 
+            d.id !== producto.id
+          ),
+          ...nuevosDescuentos
+        ]);
+      }
+    } catch (error) {
+      setMensajeAlerta(`Error al obtener descuentos: ${error.message}`);
+      setOpenAlerta(true);
+    } finally {
+      setLoading(prev => ({ ...prev, descuentos: false }));
     }
-  } catch (error) {
-    setMensajeAlerta(`Error al obtener descuentos: ${error.message}`);
-    setOpenAlerta(true);
-  } finally {
-    setLoading(prev => ({ ...prev, descuentos: false }));
-  }
-}, [listas, getDescuentosProducto, getApiProductId]);
+  }, [listas, getDescuentosProducto, getApiProductId ]);
 
   // Manejar cambio de porcentajes
   
-const handleCambioPorcentaje = useCallback((productoId, lista, campo, valor) => {
+  const handleCambioPorcentaje = useCallback((productoId, lista, campo, valor) => {
   const nuevoValor = parseFloat(valor) || 0;
-  console.log('🔄 Cambio porcentaje:', { productoId, lista, campo, valor: nuevoValor });
 
   setPorcentajesPorProducto(prev => {
+    // Crear una COPIA del estado actual
     const nuevosPorcentajes = { ...prev };
     
+    // Si el producto no tiene configuración, crearla
     if (!nuevosPorcentajes[productoId]) {
       nuevosPorcentajes[productoId] = {
         qf: porcentajesGlobales.qf,
@@ -347,30 +355,15 @@ const handleCambioPorcentaje = useCallback((productoId, lista, campo, valor) => 
       };
     }
     
+    // Actualizar SOLO el valor que cambió
     nuevosPorcentajes[productoId][campo] = nuevoValor;
 
-    // Actualizar descuentos aplicados
+    // Actualizar precios
     setDescuentosAplicados(prevDescuentos => 
       prevDescuentos.map(item => {
-        // Buscar por múltiples identificadores
-        const coincideId = item.idUnico === productoId || 
-                          getProductId(item) === productoId ||
-                          item.codigo === productoId;
-        
-        if (coincideId && item.lista === lista) {
+        if (getProductId(item) === productoId && item.lista === lista) {
           const totalDescuento = nuevosPorcentajes[productoId].qf + nuevosPorcentajes[productoId].prov;
-          const precioBase = parseFloat(item.precio) || 0;
-          const precioFinal = precioBase - (precioBase * (totalDescuento / 100));
-          
-          console.log('✅ Recalculado:', { 
-            producto: item.producto, 
-            lista: item.lista,
-            precioBase, 
-            qf: nuevosPorcentajes[productoId].qf, 
-            prov: nuevosPorcentajes[productoId].prov, 
-            totalDescuento, 
-            precioFinal 
-          });
+          const precioFinal = item.precio - (item.precio * (totalDescuento / 100));
           
           return {
             ...item,
@@ -385,7 +378,7 @@ const handleCambioPorcentaje = useCallback((productoId, lista, campo, valor) => 
 
     return nuevosPorcentajes;
   });
-}, [porcentajesGlobales, getProductId]);
+}, [porcentajesGlobales]);
   // Función para abrir diálogo de eliminación
   const handleOpenDialogEliminar = useCallback((producto) => {
     setProductoAEliminar(producto);
@@ -466,16 +459,18 @@ const productosConLista = useMemo(() => {
   return [...productosLaboratorio, ...productosSeleccionados].map(prod => {
     const productoId = getProductId(prod);
     
-    // CORREGIDO: Usar getProductId consistentemente
+    // Buscar si ya tenemos descuentos aplicados para este producto
     const descuentosProducto = descuentosAplicados.filter(desc =>
-      getProductId(desc) === productoId
+      getApiProductId(desc) === productoId
     );
 
-    // MEJORADO: Buscar información de precio de manera más robusta
-    const primerDescuento = descuentosProducto[0];
-    const precioFinal = primerDescuento?.precio || prod.precio || 0;
-    const listaFinal = primerDescuento?.lista || prod.lista || '';
-    
+    // Si no hay descuentos aplicados aún, usar la información base del producto
+    const primerDescuento = descuentosProducto[0] || {
+      lista: prod.lista || '',
+      precio: prod.precio || 0,
+      total: prod.total || 0
+    };
+
     const porcentajes = porcentajesPorProducto[productoId] || { 
       qf: porcentajesGlobales.qf, 
       prov: porcentajesGlobales.prov 
@@ -483,45 +478,57 @@ const productosConLista = useMemo(() => {
 
     return {
       ...prod,
-      lista: listaFinal,
-      precio: precioFinal,  // ← Ahora siempre tendrá un valor
-      total: calcularTotal(precioFinal, porcentajes.qf, porcentajes.prov),
+      lista: primerDescuento.lista,
+      precio: primerDescuento.precio,
+      total: primerDescuento.total,
       descq: porcentajes.qf,
       descprov: porcentajes.prov,
-      todosDescuentos: descuentosProducto,
+      todosDescuentos: descuentosProducto.length > 0 ? descuentosProducto : prod.todosLosPrecios || [],
       idUnico: productoId
     };
   });
-}, [productosLaboratorio, productosSeleccionados, descuentosAplicados, porcentajesPorProducto, porcentajesGlobales, getProductId, calcularTotal]);
-  // Descuentos para mostrar (del producto seleccionado)
-const descuentosParaMostrar = useMemo(() => {
-  if (!productoSeleccionadoActual) return [];
-  const productId = productoSeleccionadoActual.idUnico; // ← Usar idUnico directamente
-  
-  console.log('📊 Buscando descuentos para:', {
-    producto: productoSeleccionadoActual.producto,
-    productId,
-    totalDescuentos: descuentosAplicados.length
-  });
-  
-  return descuentosAplicados.filter(d => d.idUnico === productId);
-}, [descuentosAplicados, productoSeleccionadoActual]);
+}, [productosLaboratorio, productosSeleccionados, descuentosAplicados, porcentajesPorProducto, porcentajesGlobales, getProductId, getApiProductId]);
 
+  // Descuentos para mostrar (del producto seleccionado)
+  const descuentosParaMostrar = useMemo(() => {
+    if (!productoSeleccionadoActual) return [];
+    const productId = getProductId(productoSeleccionadoActual);
+    return descuentosAplicados.filter(d => 
+      d.codigo === productId || d.idproducto === productId || d.id === productId
+    );
+  }, [descuentosAplicados, productoSeleccionadoActual, getProductId]);
+
+  // Efecto para enviar datos al componente padre
   useEffect(() => {
-  const datosParaEnviar = {
-    productosSeleccionados: productosConLista.map(prod => {
-      const descuentos = getDescuentosProducto(prod);
-      return {
-        ...prod,
-        codigoproducto: prod.codigoproducto || prod.codigo || prod.codigoProducto,
-        descq: descuentos.qf,
-        descprov: descuentos.prov,
-        total: calcularTotal(prod.precio || 0, descuentos.qf, descuentos.prov)
-      };
-    }),
-    // CAMBIA AQUÍ: Usar porcentajesGlobales en lugar de _default
-    porcentajeQFLab: porcentajesGlobales.qf,
-    porcentajeProvLab: porcentajesGlobales.prov,
+    const datosParaEnviar = {
+      productosSeleccionados: productosConLista.map(prod => {
+        const descuentos = getDescuentosProducto(prod);
+        return {
+          ...prod,
+          descq: descuentos.qf,
+          descprov: descuentos.prov,
+          total: calcularTotal(prod.precio || 0, descuentos.qf, descuentos.prov)
+        };
+      }),
+      porcentajeQFLab: porcentajesPorProducto._default.qf,
+      porcentajeProvLab: porcentajesPorProducto._default.prov,
+      selectedLabs,
+      tipoProducto,
+      searchTerm,
+      descripcion,
+      fechaInicio,
+      fechaFin,
+      canales,
+      listas,
+      descuentoPara,
+      proveedorSeleccionado,
+      laboratorioSeleccionado,
+    };
+
+    onDatosCambio(datosParaEnviar);
+  }, [
+    productosConLista,
+    porcentajesPorProducto,
     selectedLabs,
     tipoProducto,
     searchTerm,
@@ -533,28 +540,10 @@ const descuentosParaMostrar = useMemo(() => {
     descuentoPara,
     proveedorSeleccionado,
     laboratorioSeleccionado,
-  };
-
-  onDatosCambio(datosParaEnviar);
-}, [
-  productosConLista,
-  porcentajesGlobales, // ← AGREGAR AQUÍ
-  porcentajesPorProducto,
-  selectedLabs,
-  tipoProducto,
-  searchTerm,
-  descripcion,
-  fechaInicio,
-  fechaFin,
-  canales,
-  listas,
-  descuentoPara,
-  proveedorSeleccionado,
-  laboratorioSeleccionado,
-  onDatosCambio,
-  getDescuentosProducto,
-  calcularTotal
-]);
+    onDatosCambio,
+    getDescuentosProducto,
+    calcularTotal
+  ]);
 
   // Funciones para el modal de productos
   const handleOpenProductoModal = useCallback(() => {
@@ -635,7 +624,7 @@ const descuentosParaMostrar = useMemo(() => {
   }, []);
 const handleProductoSeleccionado = useCallback(async (prod) => {
   const productoId = getApiProductId(prod);
-  
+
   // Verificación robusta de duplicados
   const productoYaExiste = [...productosSeleccionados, ...productosLaboratorio].some(
     p => getApiProductId(p) === productoId
@@ -644,7 +633,7 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
   if (productoYaExiste) {
     setMensajeAlerta('Este producto ya ha sido seleccionado');
     setOpenAlerta(true);
-    return;
+    return; // Salir de la función si ya existe
   }
 
   // Inicialización del producto
@@ -654,10 +643,10 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
     descq: porcentajesGlobales.qf,
     descprov: porcentajesGlobales.prov,
     lista: listas[0] || '',
-    vvf: prod.vvf || 0  
+     vvf: prod.vvf || 0  
   };
 
-  // Actualización de estados
+  // Actualización de estados (solo si no es duplicado)
   setProductosSeleccionados(prev => [...prev, nuevoProducto]);
   
   setPorcentajesPorProducto(prev => ({
@@ -668,7 +657,7 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
     }
   }));
 
-  // Cargar precios - CORREGIDO
+  // Cargar precios
   try {
     const response = await axios.post(`${BASE_URL}/api/Descuento/obtener-precios`, {
       idProducto: productoId,
@@ -676,39 +665,30 @@ const handleProductoSeleccionado = useCallback(async (prod) => {
     });
 
     if (response.data?.length > 0) {
-      const nuevosDescuentos = response.data.map(item => {
-        const totalDescuento = porcentajesGlobales.qf + porcentajesGlobales.prov;
-        const precio = parseFloat(item.precio) || 0;
-        const precioFinal = precio - (precio * (totalDescuento / 100));
-
-        return {
-          ...item,
-          idUnico: productoId,  // ← AGREGAR idUnico EXPLÍCITAMENTE
-          codigo: prod.codigo,
-          idproducto: prod.idproducto,
-          id: prod.id,
-          qf: porcentajesGlobales.qf,
-          prov: porcentajesGlobales.prov,
-          total: precioFinal.toFixed(2)
-        };
-      });
-
       setDescuentosAplicados(prev => [
-        ...prev.filter(d => d.idUnico !== productoId),
-        ...nuevosDescuentos
+        ...prev.filter(d => getApiProductId(d) !== productoId),
+        ...response.data.map(item => ({
+          ...item,
+          ...nuevoProducto,
+          precio: item.precio,
+          total: calcularTotal(item.precio, nuevoProducto.descq, nuevoProducto.descprov)
+        }))
       ]);
     }
   } catch (error) {
     console.error('Error al obtener precios:', error);
+    // Opcional: Revertir la selección si falla la API
     setProductosSeleccionados(prev => prev.filter(p => getApiProductId(p) !== productoId));
   }
 }, [
   listas, 
   porcentajesGlobales, 
+  calcularTotal,
   productosSeleccionados,
   productosLaboratorio,
   getApiProductId
 ]);
+
   const handleGuardarProductos = useCallback(() => {
     setProductosLaboratorio(prev => [...prev, ...selectedProductos]);
     setSelectedProductos([]);
@@ -782,20 +762,19 @@ const handleGuardarLab = useCallback(async () => {
             }));
 
             // 5. Guardar en descuentos aplicados para cada lista
-       const nuevosDescuentos = response.data.map(item => ({
-  ...item,
-  ...productoConInfo,
-  idUnico: productoId, // ← AGREGAR ESTO
-  precio: item.precio,
-  total: calcularTotal(item.precio, porcentajesGlobales.qf, porcentajesGlobales.prov),
-  qf: porcentajesGlobales.qf,
-  prov: porcentajesGlobales.prov
-}));
+            const nuevosDescuentos = response.data.map(item => ({
+              ...item,
+              ...productoConInfo,
+              precio: item.precio,
+              total: calcularTotal(item.precio, porcentajesGlobales.qf, porcentajesGlobales.prov),
+              qf: porcentajesGlobales.qf,
+              prov: porcentajesGlobales.prov
+            }));
 
-          setDescuentosAplicados(prev => [
-  ...prev.filter(d => d.idUnico !== productoId), // ← FILTRAR POR idUnico
-  ...nuevosDescuentos
-]);
+            setDescuentosAplicados(prev => [
+              ...prev.filter(d => getApiProductId(d) !== productoId),
+              ...nuevosDescuentos
+            ]);
           }
         } catch (error) {
           console.warn(`Producto ${producto.codigo} sin datos:`, error.message);
@@ -977,73 +956,58 @@ useEffect(() => {
                     <TableCell>Total</TableCell>
                   </TableRow>
                 </TableHead>
-              <TableBody>
-  {!productoSeleccionadoActual ? (
-    <TableRow>
-      <TableCell colSpan={5} align="center">
-        Seleccione un producto para ver sus descuentos
-      </TableCell>
-    </TableRow>
-  ) : descuentosParaMostrar.length === 0 ? (
-    <TableRow>
-      <TableCell colSpan={5} align="center">
-        {loading.descuentos ? <CircularProgress size={24} /> : 'No hay descuentos para este producto'}
-      </TableCell>
-    </TableRow>
-  ) : descuentosParaMostrar.map((desc, idx) => {
-    // CORREGIDO: Usar idUnico del producto seleccionado actual
-    const productoId = productoSeleccionadoActual.idUnico;
-    
-    console.log('🎯 Renderizando fila descuento:', {
-      producto: productoSeleccionadoActual.producto,
-      productoId,
-      lista: desc.lista,
-      porcentajesActuales: porcentajesPorProducto[productoId]
-    });
+                <TableBody>
+                  {!productoSeleccionadoActual ? (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        Seleccione un producto para ver sus descuentos
+                      </TableCell>
+                    </TableRow>
+                  ) : descuentosParaMostrar.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} align="center">
+                        {loading.descuentos ? <CircularProgress size={24} /> : 'No hay descuentos para este producto'}
+                      </TableCell>
+                    </TableRow>
+                  ) : descuentosParaMostrar.map((desc, idx) => {
+                    const productoId = desc.codigo || desc.idproducto || desc.id;
+                    const porcentajes = getDescuentosProducto(desc);
 
-    return (
-      <TableRow key={`${productoId}-${desc.lista}-${idx}`}>
-        <TableCell>{desc.lista}</TableCell>
-        <TableCell>{desc.precio}</TableCell>
-        <TableCell>
-          <TextField
-            type="number"
-            value={porcentajesPorProducto[productoId]?.qf ?? porcentajesGlobales.qf}
-            onChange={(e) => {
-              const value = e.target.value;
-              console.log('📝 Input QF cambiado:', { 
-                productoId, 
-                producto: productoSeleccionadoActual.producto,
-                valor: value 
-              });
-              handleCambioPorcentaje(productoId, desc.lista, 'qf', value);
-            }}
-            size="small"
-            inputProps={{ min: 0, step: 0.01 }}
-          />
-        </TableCell>
-        <TableCell>
-          <TextField
-            type="number"
-            value={porcentajesPorProducto[productoId]?.prov ?? porcentajesGlobales.prov}
-            onChange={(e) => {
-              const value = e.target.value;
-              console.log('📝 Input Prov cambiado:', { 
-                productoId, 
-                producto: productoSeleccionadoActual.producto,
-                valor: value 
-              });
-              handleCambioPorcentaje(productoId, desc.lista, 'prov', value);
-            }}
-            size="small"
-            inputProps={{ min: 0, step: 0.01 }}
-          />
-        </TableCell>
-        <TableCell>{desc.total}</TableCell>
-      </TableRow>
-    );
-  })}
-</TableBody>
+                    return (
+                      <TableRow key={`${productoId}-${desc.lista}-${idx}`}>
+                        <TableCell>{desc.lista}</TableCell>
+                        <TableCell>{desc.precio}</TableCell>
+                        <TableCell>
+  <TextField
+    type="number"
+  value={porcentajesPorProducto[productoId]?.qf ?? porcentajesGlobales.qf}
+  onChange={(e) => {
+    const value = e.target.value;
+    console.log('Input cambiado:', value); // Para depuración
+    handleCambioPorcentaje(productoId, desc.lista, 'qf', value);
+  }}
+    size="small"
+    inputProps={{ min: 0, step: 0.01 }}
+  />
+</TableCell>
+<TableCell>
+  <TextField
+    type="number"
+  value={porcentajesPorProducto[productoId]?.prov ?? porcentajesGlobales.prov}
+ onChange={(e) => {
+    const value = e.target.value;
+    console.log('Input cambiado:', value); // Para depuración
+    handleCambioPorcentaje(productoId, desc.lista, 'prov', value);
+  }}
+    size="small"
+    inputProps={{ min: 0, step: 0.01 }}
+  />
+</TableCell>
+                        <TableCell>{desc.total}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
               </Table>
             </Box>
           </Paper>

@@ -378,7 +378,7 @@ const ListarDescuento = () => {
               {productos.length > 0 && (
                 <>
                   <Typography variant="h6" sx={{ mt: 2 }}>
-                    Productos del Pack
+                    Productos del Descuento
                   </Typography>
                   <TableContainer component={Paper}>
                     <Table size="small">
@@ -395,8 +395,8 @@ const ListarDescuento = () => {
                           <TableRow key={index}>
                             <TableCell>{prod.idproducto}</TableCell>
                             <TableCell>{prod.descripcion}</TableCell>
-                            <TableCell>{prod.descuentoqf}</TableCell>
-                            <TableCell>{prod.descuentoprov}</TableCell>
+                        <TableCell>{(prod.descuentoqf * 100).toFixed(2)}</TableCell>
+<TableCell>{(prod.descuentoprov * 100).toFixed(2)}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
