@@ -141,18 +141,30 @@ const listasConDescripcion = listas.map(id => {
                 onChange={e => setDescripcion(e.target.value)}
                 margin="normal"
               />
-              <DatePicker
-                label="Fecha Inicio"
-                value={fechaInicio}
-                onChange={setFechaInicio}
-                renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
-              />
-              <DatePicker
-                label="Fecha Fin"
-                value={fechaFin}
-                onChange={setFechaFin}
-                renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
-              />
+          <TextField
+  type="date"
+  label="Fecha Inicio"
+  name="fechainicio"
+  value={fechaInicio.format('YYYY-MM-DD')}
+  onChange={(e) => setFechaInicio(e.target.value)}
+  renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+  InputLabelProps={{ shrink: true }}
+/>
+
+          <TextField
+  type="date"
+  label="Fecha Fin"
+  name="Fechfin"
+  value={fechaFin.format('YYYY-MM-DD')}
+  onChange={(e) => setFechaFin(e.target.value)}
+  renderInput={(params) => <TextField {...params} fullWidth margin="normal" />}
+  InputLabelProps={{ shrink: true }}
+/>
+
+
+
+              
+           
               <FormLabel component="legend" style={{ marginTop: 16 }}>Descuento Para</FormLabel>
               <RadioGroup row value={descuentoPara} onChange={e => setDescuentoPara(e.target.value)}>
                 <FormControlLabel value="Proveedor" control={<Radio />} label="Proveedor" />
@@ -187,61 +199,103 @@ const listasConDescripcion = listas.map(id => {
               )}
             </Grid>
 
-            <Grid item xs={12} md={3}>
-              <Typography variant="subtitle1">Canales de Venta</Typography>
-              <Paper variant="outlined" style={{ marginTop: 8 }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell>Descripción</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {canalesDisponibles.map(c => (
-                      <TableRow key={c.idCanalVenta}>
-                        <TableCell>
-                          <Checkbox
-                            checked={canales.includes(c.idCanalVenta)}
-                            onChange={() => toggleCanal(c.idCanalVenta)}
-                          />
-                        </TableCell>
-                        <TableCell>{c.descripcion}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Paper>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Typography variant="subtitle1">Lista de Precios</Typography>
-              <Paper variant="outlined" style={{ marginTop: 8 }}>
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell></TableCell>
-                      <TableCell>ID</TableCell>
-                      <TableCell>Descripción</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {listasDisponibles.map(l => (
-                      <TableRow key={l.idListaPrecio}>
-                        <TableCell>
-                          <Checkbox
-                            checked={listas.includes(l.idListaPrecio)}
-                            onChange={() => toggleLista(l.idListaPrecio)}
-                          />
-                        </TableCell>
-                        <TableCell>{l.idListaPrecio}</TableCell>
-                        <TableCell>{l.descripcion}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </Paper>
-            </Grid>
+   {/* CANALES DE VENTA */}
+<Grid item xs={12} md={3}>
+  <Typography
+    variant="subtitle1"
+    sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
+  >
+    Canales de Venta
+  </Typography>
+  <Paper
+    variant="outlined"
+    sx={{
+      height: 320,
+      overflow: 'auto',
+      borderRadius: 2,
+      boxShadow: 1,
+    }}
+  >
+    <Table stickyHeader size="small">
+      <TableHead>
+        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+          <TableCell padding="checkbox"></TableCell>
+          <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {canalesDisponibles.map(c => (
+          <TableRow
+            key={c.idCanalVenta}
+            hover
+            sx={{
+              '&:hover': { backgroundColor: '#f0f8ff' },
+            }}
+          >
+            <TableCell padding="checkbox">
+              <Checkbox
+                color="primary"
+                checked={canales.includes(c.idCanalVenta)}
+                onChange={() => toggleCanal(c.idCanalVenta)}
+              />
+            </TableCell>
+            <TableCell>{c.descripcion}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </Paper>
+</Grid>
+          
+{/* LISTA DE PRECIOS */}
+<Grid item xs={12} md={3}>
+  <Typography
+    variant="subtitle1"
+    sx={{ fontWeight: 'bold', mb: 1, color: 'primary.main' }}
+  >
+    Lista de Precios
+  </Typography>
+  <Paper
+    variant="outlined"
+    sx={{
+      height: 320,
+      overflow: 'auto',
+      borderRadius: 2,
+      boxShadow: 1,
+    }}
+  >
+    <Table stickyHeader size="small">
+      <TableHead>
+        <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+          <TableCell padding="checkbox"></TableCell>
+          <TableCell sx={{ fontWeight: 'bold' }}>ID</TableCell>
+          <TableCell sx={{ fontWeight: 'bold' }}>Descripción</TableCell>
+        </TableRow>
+      </TableHead>
+      <TableBody>
+        {listasDisponibles.map(l => (
+          <TableRow
+            key={l.idListaPrecio}
+            hover
+            sx={{
+              '&:hover': { backgroundColor: '#f0f8ff' },
+            }}
+          >
+            <TableCell padding="checkbox">
+              <Checkbox
+                color="primary"
+                checked={listas.includes(l.idListaPrecio)}
+                onChange={() => toggleLista(l.idListaPrecio)}
+              />
+            </TableCell>
+            <TableCell>{l.idListaPrecio}</TableCell>
+            <TableCell>{l.descripcion}</TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </Paper>
+</Grid>
           </Grid>
         )}
 

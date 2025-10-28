@@ -24,7 +24,7 @@ const ModalSucursal = ({ open, onClose, onSelect, sucursalesSeleccionadas = [] }
     if (open) {
       setLoading(true);
       axios
-        .get(`${BASE_URL}/Descuento/sucursalQF`)
+        .get(`${BASE_URL}/api/Descuento/sucursalQF`)
         .then((res) => setSucursales(res.data))
         .catch(() => alert("Error al cargar sucursales"))
         .finally(() => setLoading(false));
