@@ -96,6 +96,7 @@ const Contabilidad = () => {
       TipoPago: item.tipoPago,
       Representante: item.representante,
       Lugar: item.lugar,
+      distrito: item.distrito,
       Nombre: item.nombre,
       TipoDocumento: item.tipoDocumento,
       DocIdentidad: item.docIdentidad,
@@ -110,7 +111,7 @@ const Contabilidad = () => {
       Descuento: item.descuento,
       Renta: item.renta,
       PagoDespuesNeto: item.pagoDespuesNeto,
-      FechaRegistro: item.fechaRegistro ? dayjs(item.fechaRegistro).format('YYYY-MM-DD') : '',
+         FechaCarga: item.fechaCarga ? dayjs(item.fechaCarga).format('YYYY-MM-DD') : '',
       FechaEmision: item.fechaEmision ? dayjs(item.fechaEmision).format('YYYY-MM-DD') : '',
       Documento: item.documento,
       Serie: item.serie,
@@ -121,7 +122,8 @@ const Contabilidad = () => {
       TotalAPagar: item.totalAPagar,
       Descripcion: item.descripcion,
       Observaciones: item.observaciones,
-      FechaCarga: item.fechaCarga ? dayjs(item.fechaCarga).format('YYYY-MM-DD') : '',
+
+      fecha_carga_conta: item.fecha_carga_conta ? dayjs(item.fecha_carga_conta).format('YYYY-MM-DD') : '',
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(datosExcel);
@@ -276,6 +278,7 @@ const Contabilidad = () => {
                       <TableCell>Tipo Pago</TableCell>
                       <TableCell>Representante</TableCell>
                       <TableCell>Lugar</TableCell>
+                      <TableCell>Distrito</TableCell>
                       <TableCell>Nombre</TableCell>
                       <TableCell>Tipo Documento</TableCell>
                       <TableCell>Doc Identidad</TableCell>
@@ -290,7 +293,7 @@ const Contabilidad = () => {
                       <TableCell>Descuento</TableCell>
                       <TableCell>Renta</TableCell>
                       <TableCell>Pago Después Neto</TableCell>
-                      <TableCell>Fecha Registro</TableCell>
+                      <TableCell>Fecha Carga</TableCell>
                       <TableCell>Fecha Emisión</TableCell>
                       <TableCell>Documento</TableCell>
                       <TableCell>Serie</TableCell>
@@ -301,7 +304,7 @@ const Contabilidad = () => {
                       <TableCell>Total A Pagar</TableCell>
                       <TableCell>Descripción</TableCell>
                       <TableCell>Observaciones</TableCell>
-                      <TableCell>Fecha Carga</TableCell>
+                      <TableCell>Fecha Carga Conta</TableCell>
                     </TableRow>
                   </TableHead>
                <TableBody>
@@ -317,6 +320,7 @@ const Contabilidad = () => {
         <TableCell>{m.tipoPago}</TableCell>
         <TableCell>{m.representante}</TableCell>
         <TableCell>{m.lugar}</TableCell>
+        <TableCell>{m.distrito}</TableCell>
         <TableCell>{m.nombre}</TableCell>
         <TableCell>{m.tipoDocumento}</TableCell>
         <TableCell>{m.docIdentidad}</TableCell>
@@ -331,7 +335,7 @@ const Contabilidad = () => {
         <TableCell>{m.descuento}</TableCell>
         <TableCell>{m.renta}</TableCell>
         <TableCell>{m.pagoDespuesNeto}</TableCell>
-        <TableCell>{m.fechaRegistro ? dayjs(m.fechaRegistro).format('YYYY-MM-DD') : ''}</TableCell>
+        <TableCell>{m.fechaCarga ? dayjs(m.fechaCarga).format('YYYY-MM-DD') : ''}</TableCell>
         <TableCell>{m.fechaEmision ? dayjs(m.fechaEmision).format('YYYY-MM-DD') : ''}</TableCell>
         <TableCell>{m.documento}</TableCell>
         <TableCell>{m.serie}</TableCell>
@@ -342,7 +346,7 @@ const Contabilidad = () => {
         <TableCell>{m.totalAPagar}</TableCell>
         <TableCell>{m.descripcion}</TableCell>
         <TableCell>{m.observaciones}</TableCell>
-        <TableCell>{m.fechaCarga ? dayjs(m.fechaCarga).format('YYYY-MM-DD') : ''}</TableCell>
+        <TableCell>{m.fecha_carga_conta ? dayjs(m.fecha_carga_conta).format('YYYY-MM-DD') : ''}</TableCell>
       </TableRow>
     ))
   ) : (

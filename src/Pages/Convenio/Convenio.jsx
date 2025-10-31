@@ -52,6 +52,7 @@ const Convenio = () => {
     docum: '',
     representante: '',
     lugar: '',
+    distrito: '',
     nombre: '',
     tipo_Documento: '',
     doc_Identidad: '',
@@ -95,13 +96,14 @@ const Convenio = () => {
 
       let data = [];
       if (documento === 'SIN RXH') {
-        data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "doc_Identidad", "ruc", "banco",
+        data = [["Representante", "Lugar","distrito","Nombre", "TipoDocumento", "doc_Identidad", "ruc", "banco",
           "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "Pago_Bruto", "pago_Despues",
           "Descuento", "Renta", "PagoDespuesNeto"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
             c.lugar,
+             c.distrito,
             c.nombre,
             c.tipo_Documento,
             c.doc_Identidad,
@@ -119,15 +121,14 @@ const Convenio = () => {
           ]);
         });
       } else {
-        data = [["Representante", "Lugar", "Nombre", "TipoDocumento", "DocIdentidad", "RUC", "Banco",
+        data = [["Representante", "Lugar","distrito","Nombre", "TipoDocumento", "DocIdentidad", "RUC", "Banco",
           "CuentaCorriente", "CuentaInterbancaria", "UnidadFm", "Ventas", "PagoBruto",
-          "PagoDespues", "Descuento", "Renta", "PagoDespuesNeto", "FechaEmision",
-          "Documento", "Serie", "Numero", "Importe", "Detraccion", "RentaFinal", "TotalAPagar",
-          "Descripcion", "Observaciones"]];
+          "PagoDespues", "Descuento", "Renta", "PagoDespuesNeto"]];
         convenios.forEach(c => {
           data.push([
             c.representante,
             c.lugar,
+             c.distrito,
             c.nombre,
             c.tipo_Documento,
             c.doc_Identidad,
@@ -141,17 +142,7 @@ const Convenio = () => {
             c.pago_Despues,
             c.descuento,
             c.renta,
-            c.pago_Despues_Neto,
-            c.fecha_Emision ?? '-',
-            c.documento ?? '-',
-            c.serie ?? '-',
-            c.numero ?? '-',
-            c.importe,
-            c.detraccion,
-            c.renta_Final,
-            c.total_A_Pagar,
-            c.descripcion ?? '-',
-            c.observaciones ?? '-'
+            c.pago_Despues_Neto
           ]);
         });
       }
@@ -207,6 +198,7 @@ const Convenio = () => {
       docum: documento,
       representante: '',
       lugar: '',
+      distrito: '',
       nombre: '',
       tipo_Documento: '',
       doc_Identidad: '',
@@ -347,6 +339,7 @@ const Convenio = () => {
                     <TableRow>
                       <TableCell>Representante</TableCell>
                       <TableCell>Lugar</TableCell>
+                          <TableCell>Distrito</TableCell>
                       <TableCell>Nombre</TableCell>
                       <TableCell>Tipo Doc.</TableCell>
                       <TableCell>Doc. Identidad</TableCell>
@@ -362,6 +355,7 @@ const Convenio = () => {
                       <TableRow key={i} hover>
                         <TableCell>{m.representante}</TableCell>
                         <TableCell>{m.lugar}</TableCell>
+                         <TableCell>{m.distrito}</TableCell>
                         <TableCell>{m.nombre}</TableCell>
                         <TableCell>{m.tipo_Documento}</TableCell>
                         <TableCell>{m.doc_Identidad}</TableCell>
@@ -419,9 +413,9 @@ const Convenio = () => {
         onChange={e => setMedicoForm(prev => ({ ...prev, tipo_Documento: e.target.value }))}
         label="Tipo Documento"
       >
-        <MenuItem value="DNI">DNI</MenuItem>
-        <MenuItem value="CARNET">Carnet de Extranjería</MenuItem>
-        <MenuItem value="PASAPORTE">Pasaporte</MenuItem>
+        <MenuItem value="1">DNI</MenuItem>
+        <MenuItem value="3">Carnet de Extranjería</MenuItem>
+        <MenuItem value="4">Pasaporte</MenuItem>
       </Select>
     </FormControl>
 
@@ -436,9 +430,9 @@ const Convenio = () => {
         const tipo = medicoForm.tipo_Documento;
         let regex;
 
-        if (tipo === 'DNI') regex = /^[0-9]{0,8}$/;
-        else if (tipo === 'CARNET') regex = /^[A-Z0-9]{0,12}$/;
-        else if (tipo === 'PASAPORTE') regex = /^[A-Z0-9]{0,9}$/;
+        if (tipo === '1') regex = /^[0-9]{0,8}$/;
+        else if (tipo === '3') regex = /^[A-Z0-9]{0,12}$/;
+        else if (tipo === '4') regex = /^[A-Z0-9]{0,9}$/;
         else regex = /.*/;
 
         if (regex.test(val)) {
@@ -476,23 +470,81 @@ const Convenio = () => {
       />
     )}
 
-    {/* Lugar */}
-    <TextField
-      size="small"
-      label="Lugar"
-      fullWidth
-      value={medicoForm.lugar}
-      onChange={e => setMedicoForm(prev => ({ ...prev, lugar: e.target.value }))}
-    />
+<FormControl size="small" fullWidth>
+  <InputLabel id="lugar-label">Lugar</InputLabel>
+  <Select
+    labelId="lugar-label"
+    value={medicoForm.lugar}
+    onChange={e => setMedicoForm(prev => ({ ...prev, lugar: e.target.value, distrito: '' }))}
+    label="Lugar"
+  >
+    <MenuItem value="LIMA">LIMA</MenuItem>
+    <MenuItem value="CHICLAYO">CHICLAYO</MenuItem>
+    <MenuItem value="AREQUIPA">AREQUIPA</MenuItem>
+    <MenuItem value="PIURA">PIURA</MenuItem>
+    <MenuItem value="TACNA">TACNA</MenuItem>
+    <MenuItem value="TRUJILLO">TRUJILLO</MenuItem>
+    <MenuItem value="HUANCAYO">HUANCAYO</MenuItem>
+    <MenuItem value="CUSCO">CUSCO</MenuItem>
+    <MenuItem value="ICA">ICA</MenuItem>
+    <MenuItem value="AYACUCHO">AYACUCHO</MenuItem>
+    <MenuItem value="CHINCHA">CHINCHA</MenuItem>
+  </Select>
+</FormControl>
+
+{/* Distrito (solo si el lugar es LIMA) */}
+{medicoForm.lugar === 'LIMA' && (
+  <FormControl size="small" fullWidth>
+    <InputLabel id="distrito-label">Distrito</InputLabel>
+    <Select
+      labelId="distrito-label"
+      value={medicoForm.distrito}
+      onChange={e => setMedicoForm(prev => ({ ...prev, distrito: e.target.value }))}
+      label="Distrito"
+    >
+      <MenuItem value="ATE">ATE</MenuItem>
+      <MenuItem value="BREÑA">BREÑA</MenuItem>
+      <MenuItem value="CHORRILLOS">CHORRILLOS</MenuItem>
+      <MenuItem value="COMAS">COMAS</MenuItem>
+      <MenuItem value="JESUS MARIA">JESÚS MARÍA</MenuItem>
+      <MenuItem value="LA MOLINA">LA MOLINA</MenuItem>
+      <MenuItem value="LA VICTORIA">LA VICTORIA</MenuItem>
+      <MenuItem value="LINCE">LINCE</MenuItem>
+      <MenuItem value="LOS OLIVOS">LOS OLIVOS</MenuItem>
+      <MenuItem value="MIRAFLORES">MIRAFLORES</MenuItem>
+      <MenuItem value="PUEBLO LIBRE">PUEBLO LIBRE</MenuItem>
+      <MenuItem value="RIMAC">RÍMAC</MenuItem>
+      <MenuItem value="SAN BORJA">SAN BORJA</MenuItem>
+      <MenuItem value="SAN ISIDRO">SAN ISIDRO</MenuItem>
+      <MenuItem value="SAN JUAN DE LURIGANCHO">SAN JUAN DE LURIGANCHO</MenuItem>
+      <MenuItem value="SAN JUAN DE MIRAFLORES">SAN JUAN DE MIRAFLORES</MenuItem>
+      <MenuItem value="SAN LUIS">SAN LUIS</MenuItem>
+      <MenuItem value="SAN MARTIN DE PORRES">SAN MARTÍN DE PORRES</MenuItem>
+      <MenuItem value="SAN MIGUEL">SAN MIGUEL</MenuItem>
+      <MenuItem value="SANTA ANITA">SANTA ANITA</MenuItem>
+      <MenuItem value="SANTIAGO DE SURCO">SANTIAGO DE SURCO</MenuItem>
+      <MenuItem value="SURQUILLO">SURQUILLO</MenuItem>
+      <MenuItem value="VILLA EL SALVADOR">VILLA EL SALVADOR</MenuItem>
+      <MenuItem value="VILLA MARIA DEL TRIUNFO">VILLA MARÍA DEL TRIUNFO</MenuItem>
+    </Select>
+  </FormControl>
+)}
 
     {/* RUC */}
-    <TextField
-      size="small"
-      label="RUC"
-      fullWidth
-      value={medicoForm.ruc}
-      onChange={e => setMedicoForm(prev => ({ ...prev, ruc: e.target.value }))}
-    />
+<TextField
+  size="small"
+  label="RUC"
+  fullWidth
+  value={medicoForm.ruc}
+  onChange={e => {
+    const val = e.target.value.replace(/\D/g, ''); // solo números
+    if (val.length <= 11) {
+      setMedicoForm(prev => ({ ...prev, ruc: val }));
+    }
+  }}
+  helperText="Debe tener 11 dígitos numéricos"
+  inputProps={{ maxLength: 11 }}
+/>
 
     {/* Banco */}
     <FormControl size="small" fullWidth>

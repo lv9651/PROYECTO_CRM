@@ -224,7 +224,7 @@ const [anio, setAnio] = useState(new Date().getFullYear());
                   <TableHead>
                     <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
                       {[
-                        'ID', 'Tipo de Pago', 'Representante', 'Lugar', 'Nombre', 'Tipo Documento',
+                        'ID', 'Tipo de Pago', 'Representante', 'Lugar', 'distrito','Nombre', 'Tipo Documento',
                         'Documento de Identidad', 'RUC', 'Banco', 'Cuenta Corriente',
                         'Cuenta Interbancaria', 'Unidad FM', 'Ventas', 'Pago Bruto',
                         'Pago Después', 'Descuento', 'Renta', 'Pago Después Neto',
