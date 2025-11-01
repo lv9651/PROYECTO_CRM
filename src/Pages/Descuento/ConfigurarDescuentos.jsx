@@ -507,7 +507,9 @@ const descuentosParaMostrar = useMemo(() => {
   return descuentosAplicados.filter(d => d.idUnico === productId);
 }, [descuentosAplicados, productoSeleccionadoActual]);
 
+
   useEffect(() => {
+    console.log(productosConLista);
   const datosParaEnviar = {
     productosSeleccionados: productosConLista.map(prod => {
       const descuentos = getDescuentosProducto(prod);

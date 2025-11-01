@@ -124,6 +124,7 @@ export default function MantenimientoWizard() {
       };
     });
 
+    
     setDatosCompletos({
       descripcion,
       fechaInicio: fechaInicio.toDate(),
@@ -404,7 +405,7 @@ export default function MantenimientoWizard() {
             descuentotodoproducto: 0,
             idproducto: JSON.stringify(
               (datosCompletos.productosSeleccionados || []).map(p => ({
-                idproducto: String(p.idproducto),
+                idproducto: String(p.idproducto ?? p.idUnico),
                 descripcion: p.producto,
                 descuentoqf: (p.descq/100) || 0,
                 descuentoprov: p.prov || 0

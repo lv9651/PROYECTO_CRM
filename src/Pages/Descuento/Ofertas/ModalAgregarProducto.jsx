@@ -22,7 +22,7 @@ import {
 } from "@mui/material";
 import { PlusCircle, Trash2 } from "lucide-react";
 import axios from "axios";
-
+import { BASE_URL } from '../../../Conf/config';
 const ModalAgregarProducto = ({
   open,
   onClose,
@@ -44,7 +44,7 @@ const ModalAgregarProducto = ({
   const buscarProductos = async () => {
     setLoading(true);
     try {
-      const url = `https://localhost:7146/api/Descuento/buscarproducto?tipoproducto=${tipoProducto}&estado=HABILITADO&top=25${
+      const url = `${BASE_URL}/api/Descuento/buscarproducto?tipoproducto=${tipoProducto}&estado=HABILITADO&top=25${
         searchTerm ? `&nombreproducto=${encodeURIComponent(searchTerm)}` : ""
       }`;
 
