@@ -46,7 +46,8 @@ const Oferta = () => {
   // ➕ Agregar producto al detalle u oferta
   const handleAgregarProducto = (producto) => {
     const nuevo = {
-      codigoproducto: producto.codigo,
+      codigoproducto: producto.id,
+       idproducto: producto.codigo,
       nombreproducto: producto.producto,
       laboratorio: producto.laboratorio,
       esFraccion: false,
@@ -55,10 +56,10 @@ const Oferta = () => {
     };
 
     if (modo === "detalle") {
-      if (detalle.some((p) => p.codigoproducto === nuevo.codigoproducto)) return;
+      if (detalle.some((p) => p.idproducto === nuevo.idproducto)) return;
       setDetalle((prev) => [...prev, nuevo]);
     } else {
-      if (oferta.some((p) => p.codigoproducto === nuevo.codigoproducto)) return;
+      if (oferta.some((p) => p.idproducto === nuevo.idproducto)) return;
       setOferta((prev) => [...prev, nuevo]);
     }
   };
@@ -66,9 +67,9 @@ const Oferta = () => {
   // ❌ Eliminar producto
 const handleEliminarFila = (codigo, tipo) => {
   if (tipo === "detalle") {
-    setDetalle((prev) => prev.filter((p) => p.codigoproducto !== codigo));
+    setDetalle((prev) => prev.filter((p) => p.idproducto !== codigo));
   } else {
-    setOferta((prev) => prev.filter((p) => p.codigoproducto !== codigo));
+    setOferta((prev) => prev.filter((p) => p.idproducto !== codigo));
   }
 };
 
@@ -164,6 +165,7 @@ const handleSeleccionarPack = (pack) => {
       idproducto: JSON.stringify({
         detalle: detalle.map((d) => ({
           codigoproducto: d.codigoproducto,
+             idproducto:d.idproducto,
           nombreproducto: d.nombreproducto,
           laboratorio: d.laboratorio,
           esFraccion: d.esFraccion,
@@ -172,6 +174,7 @@ const handleSeleccionarPack = (pack) => {
         })),
         oferta: oferta.map((o) => ({
           codigoproducto: o.codigoproducto,
+           idproducto: o.idproducto,
           nombreproducto: o.nombreproducto,
           laboratorio: o.laboratorio,
           esFraccion: o.esFraccion,
@@ -191,8 +194,8 @@ const handleSeleccionarPack = (pack) => {
     try {
       const res = await fetch(
         isNew
-          ? `${BASE_URL}/Descuento/Insertar-Descu`
-          : `${BASE_URL}/Descuento/Insertar-Descu`,
+          ? `${BASE_URL}/api/Descuento/Insertar-Descu`
+          : `${BASE_URL}/api/Descuento/Insertar-Descu`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -294,7 +297,7 @@ const handleSeleccionarPack = (pack) => {
   <Trash2 size={18} />
 </IconButton>
                 </TableCell>
-                <TableCell>{d.codigoproducto}</TableCell>
+                <TableCell>{d.idproducto}</TableCell>
                 <TableCell>{d.nombreproducto}</TableCell>
                 <TableCell>{d.laboratorio}</TableCell>
                 <TableCell>
@@ -343,7 +346,7 @@ const handleSeleccionarPack = (pack) => {
   <Trash2 size={18} />
 </IconButton>
                 </TableCell>
-                <TableCell>{o.codigoproducto}</TableCell>
+                <TableCell>{o.idproducto}</TableCell>
                 <TableCell>{o.nombreproducto}</TableCell>
                 <TableCell>{o.laboratorio}</TableCell>
                 <TableCell>
