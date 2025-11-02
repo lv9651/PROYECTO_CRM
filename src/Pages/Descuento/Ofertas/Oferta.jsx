@@ -46,8 +46,8 @@ const Oferta = () => {
   // ➕ Agregar producto al detalle u oferta
   const handleAgregarProducto = (producto) => {
     const nuevo = {
-      codigoproducto: producto.id,
-       idproducto: producto.codigo,
+      codigoproducto: producto.codigo,
+       idproducto: producto.id,
       nombreproducto: producto.producto,
       laboratorio: producto.laboratorio,
       esFraccion: false,
@@ -297,7 +297,7 @@ const handleSeleccionarPack = (pack) => {
   <Trash2 size={18} />
 </IconButton>
                 </TableCell>
-                <TableCell>{d.idproducto}</TableCell>
+                <TableCell>{d.codigoproducto}</TableCell>
                 <TableCell>{d.nombreproducto}</TableCell>
                 <TableCell>{d.laboratorio}</TableCell>
                 <TableCell>
@@ -346,7 +346,7 @@ const handleSeleccionarPack = (pack) => {
   <Trash2 size={18} />
 </IconButton>
                 </TableCell>
-                <TableCell>{o.idproducto}</TableCell>
+                <TableCell>{o.codigoproducto}</TableCell>
                 <TableCell>{o.nombreproducto}</TableCell>
                 <TableCell>{o.laboratorio}</TableCell>
                 <TableCell>
