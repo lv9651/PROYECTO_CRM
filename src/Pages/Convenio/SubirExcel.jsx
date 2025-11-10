@@ -17,6 +17,7 @@ const SubirExcel = ({ onFileUploaded }) => {
   const [mes, setMes] = useState('');
 const [anio, setAnio] = useState(new Date().getFullYear());
   const [pagos, setPagos] = useState([]);
+   const [periodo, setPeriodo] = useState(''); // 🆕 nuevo estado
   const [order, setOrder] = useState('asc');
   const [orderBy, setOrderBy] = useState('id');
   const [page, setPage] = useState(0);
@@ -31,14 +32,15 @@ const [anio, setAnio] = useState(new Date().getFullYear());
   const handleTipoPagoChange = (e) => setTipoPago(e.target.value);
   const handleMesChange = (e) => setMes(e.target.value);
   const handleAnioChange = (e) => setAnio(e.target.value);
-
+  const handlePeriodoChange = (e) => setPeriodo(e.target.value); // 🆕
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
 
   // Subir archivo Excel
-  const subirArchivo = async () => {
+   const subirArchivo = async () => {
     if (!selectedFile) return setError('Por favor, selecciona un archivo.');
     if (!tipoPago) return setError('El tipo de pago es obligatorio.');
+    if (!periodo) return setError('El período es obligatorio.');
 
     setError('');
     setLoading(true);
@@ -48,6 +50,11 @@ const [anio, setAnio] = useState(new Date().getFullYear());
     formData.append('TipoPago', tipoPago);
     formData.append('idRepresentante', user.emp_codigo);
 
+    // 🆕 Calcular año actual y crear string tipo "2025-10"
+    const anioActual = new Date().getFullYear();
+    const periodoFormatted = `${anioActual}-${periodo.toString().padStart(2, '0')}`;
+    formData.append('Periodo', periodoFormatted);
+
     try {
       const resp = await axios.post(`${BASE_URL}/api/Contabilidad_Convenio/SubirExcel`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -55,6 +62,7 @@ const [anio, setAnio] = useState(new Date().getFullYear());
       console.log('Respuesta de la API:', resp.data);
       onFileUploaded();
       setSelectedFile(null);
+      setPeriodo('');
       handleCloseModal();
     } catch (err) {
       console.error('Error al subir archivo:', err);
@@ -132,6 +140,26 @@ const [anio, setAnio] = useState(new Date().getFullYear());
                 </Select>
               </FormControl>
             </Grid>
+            <Grid item xs={12} sm={6} md={4}>
+  <FormControl fullWidth size="small">
+    <InputLabel id="periodo-label">Período</InputLabel>
+    <Select
+      labelId="periodo-label"
+      value={periodo}
+      onChange={handlePeriodoChange}
+      label="Período"
+    >
+      {[
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+      ].map((nombre, index) => (
+        <MenuItem key={index} value={index + 1}>
+          {nombre}
+        </MenuItem>
+      ))}
+    </Select>
+  </FormControl>
+</Grid>
 
             <Grid item xs={12} sm={6} md={4}>
               <Button variant="contained" color="secondary" fullWidth component="label">
