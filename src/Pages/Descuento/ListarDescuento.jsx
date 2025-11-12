@@ -246,7 +246,7 @@ const ListarDescuento = () => {
                 <TableCell><strong>Descripción</strong></TableCell>
                 <TableCell><strong>Fecha Inicio</strong></TableCell>
                 <TableCell><strong>Fecha Fin</strong></TableCell>
-                <TableCell><strong>Sucursales</strong></TableCell>
+               {/*<TableCell><strong>Sucursales</strong></TableCell>*/}
                 <TableCell><strong>Estado</strong></TableCell>
               </TableRow>
             </TableHead>
@@ -263,7 +263,7 @@ const ListarDescuento = () => {
                     <TableCell>{pack.descripcion}</TableCell>
                     <TableCell>{pack.fechaInicio?.split("T")[0]}</TableCell>
                     <TableCell>{pack.fechaFin?.split("T")[0]}</TableCell>
-                    <TableCell>
+                 {/*   <TableCell>
                       {(() => {
                         try {
                           const suc = JSON.parse(pack.idsucursal || "[]");
@@ -277,7 +277,7 @@ const ListarDescuento = () => {
                           return "—";
                         }
                       })()}
-                    </TableCell>
+                    </TableCell>*/}
                     <TableCell>
                       {resolveEstadoFromPack(pack) === "1"
                         ? "Activo"
