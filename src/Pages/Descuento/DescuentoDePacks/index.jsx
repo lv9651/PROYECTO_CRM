@@ -94,6 +94,7 @@ const DescuentoDePacks = () => {
 
   // Handlers de productos
   const handleAddSelectedProduct = useCallback((product) => {
+
     const newProduct = {
       code: product.idProducto,
       name: product.descripcion,
@@ -102,13 +103,15 @@ const DescuentoDePacks = () => {
       precioXFraccion: Number(product.precioXFraccion) || 0,
       usarFraccion: false,
       cantidad: 1,
-      incentivo: 0.00,
+      incentivo: product.incentivo || 0,
+      incentivo_total:packState.incentivo
     };
     setProducts((prev) => [...prev, newProduct]);
     setModals(prev => ({ ...prev, product: false }));
     setSearchValues(prev => ({ ...prev, product: '' }));
-  }, []);
+  }, [packState.incentivo]);
 
+  
   const handleUpdateProduct = useCallback((idx, field, value) => {
     setProducts(prev => {
       const updated = [...prev];
@@ -156,6 +159,15 @@ const DescuentoDePacks = () => {
   });
 }, []);
 
+useEffect(() => {
+  const incentivoTotal = products.reduce((acc, product) => {
+    const incentivoProducto = Number(product.incentivo) || 0;
+    return acc + incentivoProducto;
+  }, 0);
+
+  // Actualizamos el campo incentivo_total en el estado del pack
+  updateField('incentivo_total', parseFloat(incentivoTotal.toFixed(2)));
+}, [products, updateField]);
 // 🆕 Función para cerrar notificaciones
 const handleCloseNotification = useCallback((event, reason) => {
   if (reason === 'clickaway') {
@@ -254,6 +266,7 @@ const handleCloseNotification = useCallback((event, reason) => {
     );
     handleCloseModal('historial');
   }, [handleLoadPack, loadPackData, handleCloseModal]);
+
 
   // Filtros memoizados
   const filteredSucursales = useMemo(() => {
@@ -421,23 +434,26 @@ const handleCloseNotification = useCallback((event, reason) => {
     {/* Segunda fila - Precios e incentivos */}
     <Grid item xs={12} md={4}>
       <TextField
-        label="Incentivo"
-        type="number"
-        fullWidth
-        value={packState.incentive}
-        onChange={(e) => updateField('incentive', parseFloat(e.target.value) || 0)}
-        variant="outlined"
-        size="medium"
-        InputProps={{
-          endAdornment: <InputAdornment position="end">%</InputAdornment>,
-          sx: {
-            backgroundColor: '#fff',
-            borderRadius: 2,
-            transition: 'all 0.3s ease'
-          }
-        }}
-        helperText="Porcentaje adicional de incentivo (opcional)"
-      />
+  label="Incentivo Total"
+  type="number"
+  fullWidth
+  value={packState.incentivo_total}
+  variant="outlined"
+  size="medium"
+  InputProps={{
+    readOnly: true,
+    endAdornment: <InputAdornment position="end">%</InputAdornment>,
+    sx: {
+      backgroundColor: '#f8f9fa',
+      borderRadius: 2,
+      '& .MuiInputBase-input': {
+        color: '#2e7d32',
+        fontWeight: 'bold',
+      }
+    }
+  }}
+  helperText="Suma del incentivo de todos los productos del pack"
+/>
     </Grid>
 
     <Grid item xs={12} md={4}>

@@ -408,7 +408,7 @@ export default function MantenimientoWizard() {
                 idproducto: String(p.idproducto ?? p.idUnico),
                 descripcion: p.producto,
                 descuentoqf: (p.descq/100) || 0,
-                descuentoprov: p.prov || 0
+                descuentoprov: (p.descprov/100) || 0
               }))
             ),
             todocliente: false,

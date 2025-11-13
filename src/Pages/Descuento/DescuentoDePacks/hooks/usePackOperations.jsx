@@ -30,7 +30,8 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       todoproducto: false,
       descuentotodoproducto: parseFloat(packState.descuento) || 0,
       idproducto: packFormatters.formatProductosForAPI(products, packState.descuento, packState.price, 
-        (prods) => prods.reduce((total, p) => total + ((p.usarFraccion ? p.precioXFraccion : p.precioOriginal) * p.cantidad), 0)),
+        (prods) => prods.reduce((total, p) => total + ((p.usarFraccion ? p.precioXFraccion : p.precioOriginal) * p.cantidad), 0), 
+         packState.incentivo_total ),
       todocliente: true,
       descuentotodocliente: 0,
       idcanalventa: packFormatters.formatCanalesForAPI(selectedCanales),
@@ -58,7 +59,8 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       descuento: descuentoPorcentaje,
       price: productos.summary.total,
       packCode: packData.idProductoPack,
-       idDescuento: packData.idDescuento
+       idDescuento: packData.idDescuento,
+        incentivo_total: productos.summary.incentivo_total || 0,
     });
 
     const productosFormateados = productos.items.map(item => ({
@@ -69,7 +71,7 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       precioXFraccion: item.precioXFraccion || item.precio,
       usarFraccion: Boolean(item.usarFraccion),
       cantidad: item.cantidad,
-      incentivo: 0.00
+      incentivo: item.incentivo || 0.00
     }));
     
     setProducts(productosFormateados);

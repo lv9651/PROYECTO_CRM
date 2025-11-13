@@ -10,7 +10,7 @@ export const packFormatters = {
     );
   },
 
-  formatProductosForAPI: (products, descuento, price, calcularPrecioBase) => {
+  formatProductosForAPI: (products, descuento, price, calcularPrecioBase,incentivoTotal) => {
     if (products.length === 0) return "[]";
     
     return JSON.stringify({
@@ -21,11 +21,13 @@ export const packFormatters = {
         usarFraccion: p.usarFraccion,
         cantidad: p.cantidad,
         total: (p.usarFraccion ? p.precioXFraccion : p.precioOriginal) * p.cantidad,
+        incentivo:parseFloat(p.incentivo) || 0
       })),
       summary: {
         subtotal: calcularPrecioBase(products),
         descuento: descuento / 100,
-        total: price
+        total: price,
+        incentivo_total:parseFloat(incentivoTotal) || 0
       }
     });
   },

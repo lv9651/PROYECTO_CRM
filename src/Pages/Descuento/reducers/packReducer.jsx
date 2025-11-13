@@ -2,7 +2,7 @@ export const initialState = {
   packName: '',
   packCode: '',
   packDescription: '',
-  incentive: 0,
+ 
   price: 0,
   descuento: 0,
   fechaDesde: '',

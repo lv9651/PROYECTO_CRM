@@ -35,7 +35,7 @@ const descuentoMenu = [
       { name: "Mantenimiento", icon: <Build />, tipo: "Vista", component: <Mantenimiento />},
       { name: "Productos Obsequio", icon: <CardGiftcard />, tipo: "Vista", component: <Ofertas/> },
       { name: "Pack de promociones", icon: <ShoppingCart />, tipo: "Vista", component:  <PackPromociones2 />  },
-      { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },
+         {/*  { name: "Descuento personal", icon: <Group />, tipo: "Vista", component: <div>Descuento Personal</div> },Encabezado */} 
 
     ]
   }
