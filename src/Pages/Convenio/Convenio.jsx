@@ -96,8 +96,8 @@ const Convenio = () => {
 
       let data = [];
       if (documento === 'SIN RXH') {
-        data = [["Representante", "Lugar","distrito","Nombre", "TipoDocumento", "doc_Identidad", "ruc", "banco",
-          "cuenta_Corriente", "cuenta_Interbancaria", "unid_Fm", "ventas", "Pago_Bruto", "pago_Despues",
+        data = [["Representante", "Lugar","distrito","Nombre", "TipoDocumento", "DocIdentidad", "ruc", "banco",
+          "CuentaCorriente", "CuentaInterbancaria", "UnidadFm", "Ventas", "PagoBruto", "PagoDespues",
           "Descuento", "Renta", "PagoDespuesNeto"]];
         convenios.forEach(c => {
           data.push([
@@ -326,7 +326,24 @@ const Convenio = () => {
                 Agregar Médico
               </Button>
             </Grid>
-          </Grid>
+            {/* 🔵 Nuevo botón Consulta RUC */}
+  <Grid item xs={12} sm={4} md={3}>
+    <Button
+      variant="outlined"
+      color="info"
+      fullWidth
+      onClick={() => {
+        const shortUrl = "https://e-consultaruc.sunat.gob.pe/cl-ti-itmrconsruc/FrameCriterioBusquedaWeb.jsp"; 
+        window.open(shortUrl, "_blank");
+      }}
+      startIcon={<Search />}
+    >
+      Consulta RUC
+    </Button>
+  </Grid>
+
+</Grid>
+         
 
           {errorMedicos && <Alert severity="warning" sx={{ mb: 2 }}>{errorMedicos}</Alert>}
 

@@ -123,7 +123,7 @@ const Contabilidad = () => {
       Descripcion: item.descripcion,
       Observaciones: item.observaciones,
 
-      fecha_carga_conta: item.fecha_carga_conta ? dayjs(item.fecha_carga_conta).format('YYYY-MM-DD') : '',
+      
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(datosExcel);

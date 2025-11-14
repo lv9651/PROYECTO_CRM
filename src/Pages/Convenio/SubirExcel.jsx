@@ -257,7 +257,7 @@ const [anio, setAnio] = useState(new Date().getFullYear());
                         'Cuenta Interbancaria', 'Unidad FM', 'Ventas', 'Pago Bruto',
                         'Pago Después', 'Descuento', 'Renta', 'Pago Después Neto',
                         'Fecha Emisión', 'Documento', 'Serie', 'Numero', 'Importe',
-                        'Detracción', 'Renta Final', 'Total a Pagar', 'Descripción', 'Observaciones','FechaCarga'
+                        'Detracción', 'Renta Final', 'Total a Pagar', 'Descripción', 'Observaciones','FechaCarga','ESTADO','fecha_carga_conta'
                       ].map((label) => (
                         <TableCell key={label} sx={{ fontWeight: 'bold' }}>
                           {label}
