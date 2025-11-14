@@ -78,7 +78,7 @@ const ModalAgregarProducto = ({
       return;
     }
 
-    onSelect(producto);
+ onSelect({ ...producto, tipoproducto: tipoProducto });
     setAlerta({
       open: true,
       mensaje: "✅ Producto agregado correctamente.",
@@ -120,11 +120,10 @@ const ModalAgregarProducto = ({
               onChange={(e) => setTipoProducto(e.target.value)}
               label="Tipo de Producto"
             >
-              <MenuItem value="EC">ECONOMATO</MenuItem>
-              <MenuItem value="G">GRANEL</MenuItem>
-              <MenuItem value="M">MATERIA PRIMA</MenuItem>
+           
+              <MenuItem value="FM">FORMULA MAGISTRAL</MenuItem>
               <MenuItem value="PT">PRODUCTO TERMINADO</MenuItem>
-              <MenuItem value="S">SERVICIOS</MenuItem>
+              <MenuItem value="SV">SERVICIOS</MenuItem>
               <MenuItem value="">TODOS</MenuItem>
             </Select>
           </FormControl>

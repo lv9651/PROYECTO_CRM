@@ -55,11 +55,11 @@ const ProductosModal = React.memo(({
             onChange={onTipoChange}
             label="Tipo de Producto"
           >
-            <MenuItem value="EC">ECONOMATO</MenuItem>
-            <MenuItem value="G">GRANEL</MenuItem>
-            <MenuItem value="M">MATERIA PRIMA</MenuItem>
+           
+            <MenuItem value="SV">SERVICIOS</MenuItem>
+            <MenuItem value="FM">FORMULA MAGISTRAL</MenuItem>
             <MenuItem value="PT">PRODUCTO TERMINADO</MenuItem>
-            <MenuItem value="S">SERVICIOS</MenuItem>
+        
             <MenuItem value="">TODOS</MenuItem>
           </Select>
         </FormControl>
@@ -240,7 +240,7 @@ const ConfigurarDescuentos = ({
   const [selectedProductos, setSelectedProductos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [productosLaboratorio, setProductosLaboratorio] = useState([]);
-  const [tipoProducto, setTipoProducto] = useState('IS');
+  const [tipoProducto, setTipoProducto] = useState('PT');
   const [descuentosAplicados, setDescuentosAplicados] = useState([]);
   const [productosSeleccionados, setProductosSeleccionados] = useState([]);
   const [productoSeleccionadoActual, setProductoSeleccionadoActual] = useState(null);

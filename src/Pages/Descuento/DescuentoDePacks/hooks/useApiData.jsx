@@ -49,13 +49,21 @@ const fetchHistorial = useCallback((tipoDescuento = 2) =>
   fetchData(API_ENDPOINTS.HISTORIAL, 'historial', { tipoDescuento }), 
 [fetchData]);
 
-  const fetchProductos = useCallback(async (searchTerm) => {
-    if (!searchTerm || searchTerm.trim().length < PACK_CONFIG.MIN_SEARCH_LENGTH) {
-      setApiData(prev => ({ ...prev, productos: [] }));
-      return [];
-    }
-    return fetchData(`${API_ENDPOINTS.PRODUCTOS}${searchTerm}`, 'productos');
-  }, [fetchData]);
+const fetchProductos = useCallback(async (searchTerm, tipoProducto = '', top = 20) => {
+  if (!searchTerm || searchTerm.trim().length < PACK_CONFIG.MIN_SEARCH_LENGTH) {
+    setApiData(prev => ({ ...prev, productos: [] }));
+    return [];
+  }
+
+  // Normalizar tipoProducto para evitar enviar undefined/null
+  const tipo = tipoProducto ?? '';
+
+  return fetchData(API_ENDPOINTS.PRODUCTOS, 'productos', {
+    nombreProducto: searchTerm,
+    tipoProducto: tipo,
+    top
+  });
+}, [fetchData]);
 
 const savePack = useCallback(async (packData) => {
   setLoading(prev => ({ ...prev, saving: true }));

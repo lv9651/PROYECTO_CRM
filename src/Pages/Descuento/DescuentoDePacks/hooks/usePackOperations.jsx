@@ -25,7 +25,7 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       idlistaprecio: packFormatters.formatListasPrecioForAPI(selectedListasPrecio, apiData.listasPrecio),
       todotipoproducto: false,
       descuentotodotipoproducto: 0,
-      idtipoproducto: "[]",
+      idtipoproducto: packState.tipoProducto || "[]",
       excluiridproducto: "[]",
       todoproducto: false,
       descuentotodoproducto: parseFloat(packState.descuento) || 0,

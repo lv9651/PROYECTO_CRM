@@ -46,7 +46,8 @@ const DescuentoDePacks = () => {
     sucursal: '',
     canal: '',
     listaPrecio: '',
-    historial: ''
+    historial: '',
+      tipoProducto: ''
   });
 
     const [notification, setNotification] = useState({
@@ -77,13 +78,13 @@ const DescuentoDePacks = () => {
   }, [fetchSucursales, fetchCanales]);
 
   // Debounce para búsqueda de productos
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      fetchProductos(searchValues.product);
-    }, PACK_CONFIG.DEBOUNCE_DELAY);
-    
-    return () => clearTimeout(timer);
-  }, [searchValues.product, fetchProductos]);
+useEffect(() => {
+  const timer = setTimeout(() => {
+    fetchProductos(searchValues.product, searchValues.tipoProducto); // 👈 tipoProducto incluido
+  }, PACK_CONFIG.DEBOUNCE_DELAY);
+
+  return () => clearTimeout(timer);
+}, [searchValues.product, searchValues.tipoProducto, fetchProductos]);
 
   // Cálculo de precios
   useEffect(() => {
@@ -763,15 +764,27 @@ const handleCloseNotification = useCallback((event, reason) => {
       </Button>
 
       {/* Modales */}
-      <ProductModal
-        open={modals.product}
-        onClose={() => handleCloseModal('product')}
-        productSearch={searchValues.product}
-        setProductSearch={(value) => setSearchValues(prev => ({ ...prev, product: value }))}
-        productos={apiData.productos}
-        loading={loading.productos}
-        onSelectProduct={handleAddSelectedProduct}
-      />
+    <ProductModal
+  open={modals.product}
+  onClose={() => handleCloseModal('product')}
+
+  productSearch={searchValues.product}
+  setProductSearch={(value) =>
+    setSearchValues(prev => ({ ...prev, product: value }))
+  }
+
+  tipoProducto={searchValues.tipoProducto}
+  setTipoProducto={(value) => {
+    setSearchValues(prev => ({ ...prev, tipoProducto: value }));
+    updateField('tipoProducto', value); // ✅ Aquí actualizas packState
+  }}
+
+  productos={apiData.productos}
+  loading={loading.productos}
+  onSelectProduct={handleAddSelectedProduct}
+
+  onSearch={(term, tipo) => fetchProductos(term, tipo)}   // ← ESTA ES LA FUNCIÓN
+/>
 
       <SelectionModal
         open={modals.sucursales}

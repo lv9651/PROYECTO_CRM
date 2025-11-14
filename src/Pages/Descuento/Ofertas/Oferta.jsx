@@ -53,6 +53,7 @@ const Oferta = () => {
       esFraccion: false,
       cantidad: 1,
       descuento: 0,
+         tipoproducto: producto.tipoproducto
     };
 
     if (modo === "detalle") {
@@ -158,7 +159,7 @@ const handleSeleccionarPack = (pack) => {
       idlistaprecio: "[]",
       todotipoproducto: false,
       descuentotodotipoproducto: 0,
-      idtipoproducto: "[]",
+      idtipoproducto: detalle[0]?.tipoproducto || oferta[0]?.tipoproducto || "",
       excluiridproducto: "[]",
       todoproducto: false,
       descuentotodoproducto: 0,

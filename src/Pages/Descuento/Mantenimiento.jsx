@@ -134,6 +134,7 @@ export default function MantenimientoWizard() {
       descuentoPara,
       proveedorSeleccionado,
       laboratorioSeleccionado,
+        tipoProducto: datosConfigurarDescuento.tipoProducto,
       usuariomanipula: user?.emp_codigo || 0,
       ...datosConfigurarDescuento
     });
@@ -399,7 +400,7 @@ export default function MantenimientoWizard() {
             ),
             todotipoproducto: false,
             descuentotodotipoproducto: 0,
-            idtipoproducto: "",
+            idtipoproducto: datosCompletos.tipoProducto || "",
             excluiridproducto: "",
             todoproducto: false,
             descuentotodoproducto: 0,
