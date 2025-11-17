@@ -292,9 +292,9 @@ const handleCloseNotification = useCallback((event, reason) => {
     if (!searchValues.historial) return apiData.historial;
     const lowerFilter = searchValues.historial.toLowerCase();
     return apiData.historial.filter(pack =>
-      pack.IdDescuento.toString().includes(lowerFilter) ||
-      pack.Descripcion.toLowerCase().includes(lowerFilter) ||
-      pack.IdProductoPack.toString().includes(lowerFilter)
+      pack.idDescuento.toString().includes(lowerFilter) ||
+      pack.descripcion.toLowerCase().includes(lowerFilter) ||
+      pack.idProductoPack.toString().includes(lowerFilter)
     );
   }, [apiData.historial, searchValues.historial]);
 
