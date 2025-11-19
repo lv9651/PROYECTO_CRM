@@ -46,7 +46,7 @@ const RecibosValidados = () => {
       );
 
       // Filtrar solo los que ya están validados
-      const validados = res.data.filter((row) => row.validado === true);
+      const validados = res.data;
       setData(validados);
 
       // Inicializar el estado de selección

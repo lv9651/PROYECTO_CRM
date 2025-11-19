@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState , useRef} from "react";
 import {
   Box,
   Typography,
@@ -22,6 +22,7 @@ import axios from "axios";
 import { BASE_URL } from "../../Conf/config";
 import { useAuth } from "../../Compo/AuthContext";
 import GenerarPago from "./GenerarPago";
+import * as XLSX from 'xlsx';
 
 const PagoMedico = () => {
   const [data, setData] = useState([]);
@@ -34,7 +35,8 @@ const PagoMedico = () => {
   const [loadingRows, setLoadingRows] = useState({});
   const [page, setPage] = useState(0);
   const [rowsPerPage] = useState(10);
-
+  const fileInputRef = useRef(null);
+  const [uploading, setUploading] = useState(false);
   const { user } = useAuth();
 
   // Modal
@@ -42,7 +44,7 @@ const PagoMedico = () => {
   const [selectedMedico, setSelectedMedico] = useState(null);
   const [selectedConsultas, setSelectedConsultas] = useState([]);
   const [fechasDetalleFila, setFechasDetalleFila] = useState([]);
-
+const [sedesDetalleFila, setSedesDetalleFila] = useState("");
   const fetchData = () => {
     if (!fechaInicio || !fechaFin) return alert("Ingrese ambas fechas");
     setLoading(true);
@@ -87,7 +89,8 @@ const PagoMedico = () => {
   const handleOpenModal = (row) => {
     setSelectedMedico({ nombres: row.medico });
     setSelectedConsultas(row.detalles);
-
+const sedesUnicas = [...new Set(row.detalles.map((d) => d.sede.trim()))];
+setSedesDetalleFila(sedesUnicas.join(","));
     const fechasUnicas = [
       ...new Set(row.detalles.map((d) => new Date(d.fecha).toISOString().split("T")[0])),
     ];
@@ -95,7 +98,63 @@ const PagoMedico = () => {
     setFechasDetalleFila(fechasUnicas.join(","));
     setOpenModal(true);
   };
+   const handleUploadExcel = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    if (!file.name.endsWith(".xlsx")) {
+      alert("El archivo debe ser un Excel (.xlsx)");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      setUploading(true);
+      const res = await axios.post(`${BASE_URL}/api/Contabilidad_Convenio/SubirExcel-pagomedico`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      alert(`✅ ${res.data.Mensaje}. Registros insertados: ${res.data.RegistrosInsertados}`);
+      fetchData(); // recargar tabla
+    } catch (err) {
+      console.error(err);
+      if (err.response?.data?.Errores) {
+        alert("❌ Errores:\n" + err.response.data.Errores.join("\n"));
+      } else {
+        alert("❌ Ocurrió un error al subir el Excel");
+      }
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = ""; // reset input
+    }
+  };
+
+const handleDescargarPlantilla = () => {
+  // Columnas de la plantilla
+  const dataPlantilla = [
+    {
+      Fecha: "",
+      Sede: "",
+      Medico: "",
+      PagoTurno: "",
+      Turno: "",
+      NConsultas: "",
+      CantProc: "",
+      Total: "",
+      Formulas: ""
+    }
+  ];
+
+  // Crear libro Excel
+  const ws = XLSX.utils.json_to_sheet(dataPlantilla);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Plantilla");
+
+  // Descargar archivo
+  XLSX.writeFile(wb, "Plantilla_PagoMedico.xlsx");
+};
   // ✅ Procesar validaciones
   const handleProcesarValidaciones = async () => {
     const usuario = user?.emp_codigo || "admin";
@@ -149,8 +208,33 @@ const PagoMedico = () => {
         <Button variant="contained" color="primary" onClick={fetchData} sx={{ height: 56 }}>
           Consultar
         </Button>
-        <Button variant="contained" color="success" onClick={handleProcesarValidaciones} sx={{ height: 56 }}>
+      {/*   <Button variant="contained" color="success" onClick={handleProcesarValidaciones} sx={{ height: 56 }}>
           Procesar Validaciones
+        </Button> */}
+         {/* Botón Subir Excel */}
+         <Button
+  variant="contained"
+  color="warning"
+  sx={{ height: 56 }}
+  onClick={handleDescargarPlantilla}
+>
+  Descargar Plantilla
+</Button>
+        <input
+          type="file"
+          accept=".xlsx"
+          ref={fileInputRef}
+          style={{ display: "none" }}
+          onChange={handleUploadExcel}
+        />
+        <Button
+          variant="contained"
+          color="info"
+          sx={{ height: 56 }}
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? "Subiendo..." : "Subir Excel"}
         </Button>
       </Box>
 
@@ -275,6 +359,7 @@ const PagoMedico = () => {
           fechasDetalleFila={fechasDetalleFila}
           recargarHoja={fetchData}
            modoLectura={true}
+             SedesDetalleFila={sedesDetalleFila}   
         />
       )}
     </Box>
