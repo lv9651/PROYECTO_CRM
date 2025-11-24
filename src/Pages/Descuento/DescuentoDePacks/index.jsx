@@ -30,7 +30,7 @@ const DescuentoDePacks = () => {
   const [selectedCanales, setSelectedCanales] = useState([]);
   const [selectedListasPrecio, setSelectedListasPrecio] = useState([]);
   const [currentPackId, setCurrentPackId] = useState(0);
-  
+  const [tipoBase, setTipoBase] = useState(null);
   // Estados de modales
   const [modals, setModals] = useState({
     product: false,
@@ -96,6 +96,24 @@ useEffect(() => {
   // Handlers de productos
   const handleAddSelectedProduct = useCallback((product) => {
 
+      const productType = product.tipo; // ← ESTE ES EL CORRECTO
+
+  // Si no hay productos aún, el primero define el tipo
+  if (products.length === 0) {
+    setTipoBase(productType);
+  } else {
+    // Validar contra el tipo base
+    if (productType !== tipoBase) {
+      alert(`Solo se pueden agregar productos del tipo: ${tipoBase}`);
+      return; // ← evita que se agregue
+    }
+  }
+
+    if (products.some(p => p.code === product.idProducto)) {
+    alert("Este producto ya fue agregado.");
+    return;
+  }
+
     const newProduct = {
       code: product.idProducto,
       name: product.descripcion,
@@ -105,12 +123,13 @@ useEffect(() => {
       usarFraccion: false,
       cantidad: 1,
       incentivo: product.incentivo || 0,
-      incentivo_total:packState.incentivo
+      incentivo_total:packState.incentivo,
+          tipo: product.tipo // ← GUARDARLO TAMBIÉN
     };
-    setProducts((prev) => [...prev, newProduct]);
-    setModals(prev => ({ ...prev, product: false }));
-    setSearchValues(prev => ({ ...prev, product: '' }));
-  }, [packState.incentivo]);
+  setProducts((prev) => [...prev, newProduct]);
+  setModals(prev => ({ ...prev, product: false }));
+  setSearchValues(prev => ({ ...prev, product: '' }));
+}, [products, tipoBase, packState.incentivo]);
 
   
   const handleUpdateProduct = useCallback((idx, field, value) => {

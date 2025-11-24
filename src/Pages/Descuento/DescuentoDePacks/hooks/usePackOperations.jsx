@@ -49,7 +49,15 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
     const canales = JSON.parse(packData.idcanalventa);
     const listasPrecio = JSON.parse(packData.idlistaprecio);
     
-
+  let tipoProducto = "";
+   try {
+        const parsed = JSON.parse(packData.idtipoproducto);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          tipoProducto = parsed[0]; // FM / PT / SV
+        }
+      } catch {
+        tipoProducto = packData.idtipoproducto; // por si viene simple
+      }
     const descuentoPorcentaje = productos.summary.descuento * 100;
 
     loadPackData({
@@ -61,6 +69,7 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       packCode: packData.idProductoPack,
        idDescuento: packData.idDescuento,
         incentivo_total: productos.summary.incentivo_total || 0,
+         tipoProducto: tipoProducto
     });
 
     const productosFormateados = productos.items.map(item => ({
