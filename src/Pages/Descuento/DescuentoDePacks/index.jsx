@@ -307,6 +307,7 @@ const handleCloseNotification = useCallback((event, reason) => {
     );
   }, [apiData.canales, searchValues.canal]);
 
+
   const filteredHistorial = useMemo(() => {
     if (!searchValues.historial) return apiData.historial;
     const lowerFilter = searchValues.historial.toLowerCase();
@@ -316,7 +317,8 @@ const handleCloseNotification = useCallback((event, reason) => {
       pack.idProductoPack.toString().includes(lowerFilter)
     );
   }, [apiData.historial, searchValues.historial]);
-
+console.log(selectedListasPrecio);
+console.log(selectedCanales);
   const filteredListasPrecio = useMemo(() => {
     return apiData.listasPrecio.filter(lista =>
       lista.descripcion.toLowerCase().includes(searchValues.listaPrecio.toLowerCase()) ||
@@ -828,7 +830,7 @@ const handleCloseNotification = useCallback((event, reason) => {
         setSearchValue={(value) => setSearchValues(prev => ({ ...prev, canal: value }))}
         items={filteredCanales}
         loading={loading.canales}
-        selectedItems={selectedCanales}
+         selectedItems={selectedCanales.map(String)}
         onToggleItem={handleToggleCanal}
         getItemName={(item) => item.descripcion}
         getItemId={(item) => item.idCanalVenta}

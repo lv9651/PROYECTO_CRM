@@ -39,7 +39,7 @@ export const ProductModal = ({
             onSearch(productSearch, value);  // << vuelve a buscar según el nuevo tipo
           }}
         >
-          <MenuItem value="">Todos</MenuItem>
+           {/*<MenuItem value="">Todos</MenuItem>*/}
           <MenuItem value="FM">FORMULA MAGISTRAL</MenuItem>
           <MenuItem value="PT">PRODUCTO TERMINADO</MenuItem>
           <MenuItem value="SV">SERVICIOS</MenuItem>

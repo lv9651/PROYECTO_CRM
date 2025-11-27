@@ -59,7 +59,7 @@ const ProductosModal = React.memo(({
             <MenuItem value="FM">FORMULA MAGISTRAL</MenuItem>
             <MenuItem value="PT">PRODUCTO TERMINADO</MenuItem>
             <MenuItem value="SV">SERVICIOS</MenuItem>
-            <MenuItem value="">TODOS</MenuItem>
+    
           </Select>
         </FormControl>
 

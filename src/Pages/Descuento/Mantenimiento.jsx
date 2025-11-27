@@ -400,7 +400,7 @@ export default function MantenimientoWizard() {
             ),
             todotipoproducto: false,
             descuentotodotipoproducto: 0,
-            idtipoproducto: datosCompletos.tipoProducto || "",
+            idtipoproducto: datosCompletos.tipoProducto || "PT",
             excluiridproducto: "",
             todoproducto: false,
             descuentotodoproducto: 0,
