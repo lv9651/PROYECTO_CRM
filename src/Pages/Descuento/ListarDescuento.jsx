@@ -147,7 +147,7 @@ const ListarDescuento = () => {
         todocliente: true,
         usuariomanipula: user?.emp_codigo,
         idcliente: "",
-        idtipoproducto: "",
+        idtipoproducto: selectedPack.idtipoproducto ,
         excluiridproducto: "",
       };
 
