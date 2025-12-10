@@ -396,7 +396,12 @@ const Convenio = () => {
             </>
           )}
 
-          <SubirExcel onFileUploaded={handleFileUploaded} />
+     {documento && (
+  <SubirExcel 
+    documento={documento} 
+    onFileUploaded={handleFileUploaded} 
+  />
+)}
           {error && <Alert severity="error" sx={{ mt: 3 }}>{error}</Alert>}
         </CardContent>
       </Card>
@@ -593,11 +598,11 @@ const Convenio = () => {
         const val = e.target.value.replace(/\D/g, ''); // solo números
         const banco = medicoForm.banco;
         let max = 20;
-
+ {/*
         if (banco === 'BANCO DE LA NACION') max = 14;
-        else if (['BBVA', 'BCP', 'FALABELLA', 'INTERBANK'].includes(banco)) max = 13;
-        else if (banco === 'CAJA PIURA') max = 14;
-        else if (banco === 'SCOTIABANK') max = 13;
+        else if (['BBVA', 'FALABELLA', 'INTERBANK'].includes(banco)) max = 13;
+        else if (banco === 'CAJA PIURA' ,'BCP') max = 14;
+        else if (banco === 'SCOTIABANK') max = 13;*/}
 
         if (val.length <= max) {
           setMedicoForm(prev => ({ ...prev, cuenta_Corriente: val }));
@@ -609,7 +614,7 @@ const Convenio = () => {
           : medicoForm.banco === 'BBVA'
           ? 'Debe tener aprox. 13 dígitos'
           : medicoForm.banco === 'BCP'
-          ? 'Debe tener 13 dígitos'
+          ? 'Debe tener 14 dígitos'
           : medicoForm.banco === 'CAJA PIURA'
           ? 'Debe tener 14 dígitos aprox.'
           : medicoForm.banco === 'FALABELLA'

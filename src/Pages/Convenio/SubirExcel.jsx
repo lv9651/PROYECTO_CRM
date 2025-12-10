@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect} from 'react';
 import {
   Button, CircularProgress, Grid, Alert, Paper, Typography, FormControl, InputLabel,
   Select, MenuItem, Dialog, DialogActions, DialogContent, DialogTitle, TextField,
@@ -7,8 +7,13 @@ import {
 import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
 import { BASE_URL } from '../../Conf/config';
+import ConvenioCargaManual from './ConvenioCargaManual';
+const SubirExcel = ({ documento,onFileUploaded }) => {
 
-const SubirExcel = ({ onFileUploaded }) => {
+  useEffect(() => {
+    console.log("Tipo de pago recibido:", documento);
+  }, [documento]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -23,10 +28,20 @@ const [anio, setAnio] = useState(new Date().getFullYear());
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const { user } = useAuth();
-
+  const [openCargaManual, setOpenCargaManual] = useState(false); // 🔹
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setSelectedFile(file);
+  };
+
+   const handleOpenCargaManual = () => {
+    if (!documento) {
+      alert("Debe seleccionar un tipo de pago antes de abrir la carga manual.");
+      return;
+    }
+    setOpenCargaManual(true);
+    console.log(documento);
+
   };
 
   const handleTipoPagoChange = (e) => setTipoPago(e.target.value);
@@ -117,6 +132,12 @@ const [anio, setAnio] = useState(new Date().getFullYear());
             Subir Excel
           </Button>
         </Grid>
+
+        <Grid item xs={12} sm={4} md={3}>
+          <Button variant="contained" color="secondary" fullWidth onClick={handleOpenCargaManual}>
+            Carga Manual
+          </Button>
+        </Grid>
       </Grid>
 
       {/* Modal de subida de archivo */}
@@ -187,6 +208,13 @@ const [anio, setAnio] = useState(new Date().getFullYear());
           </Button>
         </DialogActions>
       </Dialog>
+           {/* Modal Carga Manual */}
+      <ConvenioCargaManual
+        open={openCargaManual}
+        onClose={() => setOpenCargaManual(false)}
+        idMedico={user.emp_codigo}
+        tipoPago={documento}  // 🔹 enviamos tipoPago
+      />
 
       {/* Consultar pagos */}
       <Typography variant="h5" gutterBottom mt={4}>
