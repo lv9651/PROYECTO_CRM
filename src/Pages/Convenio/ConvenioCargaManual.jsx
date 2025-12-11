@@ -56,7 +56,7 @@ const ConvenioCargaManual = ({ open, onClose, tipoPago, idMedico }) => {
         ...m,
         unidadFm: "",
         descuento: "",
-        ventas: 0,
+        ventas: "",
         pagoBruto: 0,
         renta: 0,
         pagoDespues: 0,
@@ -98,22 +98,36 @@ const ConvenioCargaManual = ({ open, onClose, tipoPago, idMedico }) => {
 
   // Guardar datos en API
 const guardarDatos = async () => {
+  // VALIDAR CAMPOS OBLIGATORIOS
+  for (const m of medicos) {
+    if (!m.unidadFm || parseFloat(m.unidadFm) <= 0) {
+      alert(`El campo "Unidad FM" es obligatorio para ${m.nombre}`);
+      return;
+    }
+
+    if (!m.ventas || parseFloat(m.ventas) <= 0) {
+      alert(`El campo "Ventas" es obligatorio para ${m.nombre}`);
+      return;
+    }
+  }
+
   try {
     const datosAGuardar = medicos.map(m => ({
       ...m,
       periodo,
-      distrito: m.distrito || "-",           // si es null, guarda "-"
-      tipoDocumento:  String(m.tipo_Documento || "-"),// si es null, guarda "-"
+      distrito: m.distrito || "-",
+      tipoDocumento: String(m.tipo_Documento || "-"),
       DocIdentidad: m.doc_Identidad || "-",
       TipoPago: tipoPago || "-",
       CuentaCorriente: m.cuenta_Corriente || "-",
       CuentaInterbancaria: m.cuenta_Interbancaria || "-",
-      descuento:parseFloat(m.descuento) || 0,
-      idrepresentate:idMedico
+      descuento: parseFloat(m.descuento) || 0,
+      idrepresentante: idMedico
     }));
 
     const resp = await axios.post(`${BASE_URL}/api/Contabilidad_Convenio/insertar-cargaManual`, datosAGuardar);
     alert(`Se guardaron ${resp.data.totalInsertados} registros correctamente.`);
+      onClose();
   } catch (e) {
     console.error("Error al guardar:", e.response?.data || e.message);
     alert("Error al guardar los datos");
@@ -192,25 +206,27 @@ const guardarDatos = async () => {
                       <TableCell>{m.cuenta_Interbancaria}</TableCell>
 
                       <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={m.unidadFm}
-                          onChange={e => actualizarCalculos(index, "unidadFm", e.target.value)}
-                          inputProps={{ min: 0 }}
-                          sx={{ width: 120, height: 40 }} 
-                        />
+                     <TextField
+  required
+  size="small"
+  type="number"
+  value={m.unidadFm}
+  onChange={e => actualizarCalculos(index, "unidadFm", e.target.value)}
+  inputProps={{ min: 0 }}
+  sx={{ width: 120, height: 40 }}
+/>
                       </TableCell>
 
                       <TableCell>
-                        <TextField
-                          size="small"
-                          type="number"
-                          value={m.ventas}
-                          onChange={e => actualizarCalculos(index, "ventas", e.target.value)}
-                          inputProps={{ min: 0 }}
-                          sx={{ width: 120, height: 40 }} 
-                        />
+                     <TextField
+  required
+  size="small"
+  type="number"
+  value={m.ventas}
+  onChange={e => actualizarCalculos(index, "ventas", e.target.value)}
+  inputProps={{ min: 0 }}
+  sx={{ width: 120, height: 40 }}
+/>
                       </TableCell>
 
                       <TableCell>{m.pagoBruto.toFixed(2)}</TableCell>
