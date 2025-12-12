@@ -22,6 +22,7 @@ import { useAuth } from '../../Compo/AuthContext';
 import { BASE_URL } from '../../Conf/config';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
+import PagoConvenioModal from './PagoConvenioModal';
 
 const Contabilidad = () => {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ const Contabilidad = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [archivo, setArchivo] = useState(null);
 
+  const [openModal, setOpenModal] = useState(false);
   const meses = [
     { nombre: 'Enero', valor: 1 },
     { nombre: 'Febrero', valor: 2 },
@@ -250,6 +252,16 @@ const Contabilidad = () => {
                 {loading ? <CircularProgress size={24} /> : 'Actualizar Pagos'}
               </Button>
             </Grid>
+            <Grid item xs={12} sm={6} md={6}>
+  <Button
+    variant="outlined"
+    fullWidth
+    onClick={() => setOpenModal(true)}
+    disabled={loading}
+  >
+    Cargar Varios Documentos
+  </Button>
+</Grid>
           </Grid>
 
           {error && (
@@ -369,8 +381,15 @@ const Contabilidad = () => {
           )}
         </CardContent>
       </Card>
+      <PagoConvenioModal
+  open={openModal}
+  onClose={() => setOpenModal(false)}
+  onRefresh={buscarMedicosPorFecha}
+/>
     </Container>
+    
   );
+  
 };
 
 export default Contabilidad;
