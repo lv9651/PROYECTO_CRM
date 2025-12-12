@@ -23,7 +23,7 @@ import { BASE_URL } from '../../Conf/config';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import PagoConvenioModal from './PagoConvenioModal';
-
+import FiltrarPagoModal from './FiltrarPagoModal';
 const Contabilidad = () => {
   const { user } = useAuth();
   const currentYear = new Date().getFullYear();
@@ -35,7 +35,7 @@ const Contabilidad = () => {
   const [resultados, setResultados] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [archivo, setArchivo] = useState(null);
-
+const [openFiltrar, setOpenFiltrar] = useState(false);
   const [openModal, setOpenModal] = useState(false);
   const meses = [
     { nombre: 'Enero', valor: 1 },
@@ -262,6 +262,17 @@ const Contabilidad = () => {
     Cargar Varios Documentos
   </Button>
 </Grid>
+
+         <Grid item xs={12} sm={6} md={6}>
+  <Button
+    variant="outlined"
+    fullWidth
+     onClick={() => setOpenFiltrar(true)}
+    disabled={loading}
+  >
+  HISTORIAL DOCUMENTOS
+  </Button>
+</Grid>
           </Grid>
 
           {error && (
@@ -385,6 +396,10 @@ const Contabilidad = () => {
   open={openModal}
   onClose={() => setOpenModal(false)}
   onRefresh={buscarMedicosPorFecha}
+/>
+<FiltrarPagoModal
+  open={openFiltrar}
+  onClose={() => setOpenFiltrar(false)}
 />
     </Container>
     

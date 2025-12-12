@@ -282,7 +282,7 @@ const handleCloseNotification = useCallback((event, reason) => {
       setSelectedCanales, 
       setSelectedListasPrecio, 
       loadPackData, 
-      setCurrentPackId
+      setCurrentPackId,setTipoBase
     );
     handleCloseModal('historial');
   }, [handleLoadPack, loadPackData, handleCloseModal]);

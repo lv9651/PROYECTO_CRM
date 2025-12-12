@@ -43,23 +43,30 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
     return packData;
   }, [packState, products, selectedSucursales, selectedCanales, selectedListasPrecio, apiData.listasPrecio, user]);
 
-  const handleLoadPack = useCallback((packData, setProducts, setSelectedSucursales, setSelectedCanales, setSelectedListasPrecio, loadPackData, setCurrentPackId) => {
+  const handleLoadPack = useCallback(
+  (packData, setProducts, setSelectedSucursales, setSelectedCanales, setSelectedListasPrecio, loadPackData, setCurrentPackId, setTipoBase) => {
     const productos = JSON.parse(packData.idproducto);
     const sucursales = JSON.parse(packData.idsucursal);
     const canales = JSON.parse(packData.idcanalventa);
     const listasPrecio = JSON.parse(packData.idlistaprecio);
-    
-  let tipoProducto = "";
-   try {
-        const parsed = JSON.parse(packData.idtipoproducto);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          tipoProducto = parsed[0]; // FM / PT / SV
-        }
-      } catch {
-        tipoProducto = packData.idtipoproducto; // por si viene simple
+
+    // Tipo de producto principal
+    let tipoProducto = "";
+    try {
+      const parsed = JSON.parse(packData.idtipoproducto);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        tipoProducto = parsed[0]; // FM / PT / SV
       }
+    } catch {
+      tipoProducto = packData.idtipoproducto; // por si viene simple
+    }
+
+    // Actualiza el tipo base
+    setTipoBase(tipoProducto);
+
     const descuentoPorcentaje = productos.summary.descuento * 100;
 
+    // Carga datos generales del pack
     loadPackData({
       packName: packData.descripcion,
       fechaDesde: packData.fechaInicio.split('T')[0],
@@ -67,11 +74,12 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       descuento: descuentoPorcentaje,
       price: productos.summary.total,
       packCode: packData.idProductoPack,
-       idDescuento: packData.idDescuento,
-        incentivo_total: productos.summary.incentivo_total || 0,
-         tipoProducto: tipoProducto
+      idDescuento: packData.idDescuento,
+      incentivo_total: productos.summary.incentivo_total || 0,
+      tipoProducto: tipoProducto
     });
 
+    // Formatea productos para el state
     const productosFormateados = productos.items.map(item => ({
       code: item.id,
       name: item.name,
@@ -80,16 +88,18 @@ export const usePackOperations = (packState, products, selectedSucursales, selec
       precioXFraccion: item.precioXFraccion || item.precio,
       usarFraccion: Boolean(item.usarFraccion),
       cantidad: item.cantidad,
-      incentivo: item.incentivo || 0.00
+      incentivo: item.incentivo || 0.00,
+      tipo: tipoProducto // ← importante para handleAddSelectedProduct
     }));
-    
+
     setProducts(productosFormateados);
     setSelectedSucursales(sucursales.map(s => parseInt(s.idsucursal)));
     setSelectedCanales(canales.map(c => parseInt(c.idcanalventa)));
     setSelectedListasPrecio(listasPrecio.map(l => parseInt(l.idListaPrecio)));
     setCurrentPackId(packData.idDescuento);
-  }, []);
-
+  },
+  []
+);
   return {
     handleSave,
     handleLoadPack
