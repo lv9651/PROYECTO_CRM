@@ -9,7 +9,7 @@ import {
 import axios from 'axios';
 import { BASE_URL } from '../../Conf/config';
 
-const FiltrarPagoModal = ({ open, onClose }) => {
+const FiltrarPagoModal = ({ open, onClose,idMedico }) => {
   const [representante, setRepresentante] = useState(null);
   const [representantes, setRepresentantes] = useState([]);
   const [anio, setAnio] = useState('');
@@ -75,7 +75,7 @@ const FiltrarPagoModal = ({ open, onClose }) => {
         `${BASE_URL}/api/Contabilidad_Convenio/filtrarConta`,
         {
           params: {
-            representante: representanteEnviar,
+            representante: idMedico,
             periodo
           }
         }
@@ -97,31 +97,7 @@ const FiltrarPagoModal = ({ open, onClose }) => {
         <Grid container spacing={2} sx={{ mb: 2 }}>
 
           {/* REPRESENTANTE */}
-        <Grid item xs={12}>
-  <Autocomplete
-    options={representantes}
-    getOptionLabel={(option) => option.representante}
-    value={representante}
-    onChange={(e, value) => setRepresentante(value)}
-    fullWidth
-    renderInput={(params) => (
-      <TextField
-        {...params}
-        label="Representante"
-        placeholder="Seleccione un representante (opcional)"
-        fullWidth
-        sx={{
-          minWidth: 400,  // ⚡ ancho mínimo del campo
-          height: 56,     // ⚡ altura más grande
-          '& .MuiInputBase-root': {
-            height: 56,   // ⚡ altura interna del input
-          },
-        }}
-      />
-    )}
-    sx={{ width: '100%' }}  // ⚡ asegura que ocupe todo el contenedor
-  />
-</Grid>
+   
 {/* AÑO */}
 <Grid item xs={6}>
   <FormControl fullWidth sx={{ minWidth: 200, height: 56 }}>

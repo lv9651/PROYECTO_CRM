@@ -15,7 +15,8 @@ import {
   Paper,
   Typography,
   Box,
-  Divider
+  Divider,
+  FormControl
 } from '@mui/material';
 import { AddCircle, RemoveCircle } from '@mui/icons-material';
 import axios from 'axios';
@@ -204,7 +205,7 @@ const handleMesChange = (index, mes) => {
             sx={{ p: 2, mb: 2, borderRadius: 2, background: "#f9f9f9" }}
           >
             <Grid container spacing={2} alignItems="center">
-
+<FormControl fullWidth sx={{ minWidth: 200, height: 56 }}>
               {/* REPRESENTANTE */}
               <Grid item xs={4}>
                 <Autocomplete
@@ -217,8 +218,9 @@ const handleMesChange = (index, mes) => {
                     <TextField {...params} label="Representante" fullWidth />
                   )}
                 />
+                
               </Grid>
-
+</FormControl>
               {/* MES */}
               <Grid item xs={3}>
                 <TextField
@@ -303,6 +305,7 @@ const handleMesChange = (index, mes) => {
           </Paper>
         ))}
 
+      {/* MÉDICOS CON CHECKBOXES 
         <Button
           startIcon={<AddCircle />}
           onClick={handleAddRow}
@@ -311,7 +314,7 @@ const handleMesChange = (index, mes) => {
           sx={{ mt: 2 }}
         >
           Agregar Documento
-        </Button>
+        </Button>*/}
 
       </DialogContent>
 

@@ -8,6 +8,7 @@ import axios from 'axios';
 import { useAuth } from '../../Compo/AuthContext';
 import { BASE_URL } from '../../Conf/config';
 import ConvenioCargaManual from './ConvenioCargaManual';
+import Vista_documento from './FiltrarPagoModal_User';
 const SubirExcel = ({ documento,onFileUploaded }) => {
 
   useEffect(() => {
@@ -29,6 +30,7 @@ const [anio, setAnio] = useState(new Date().getFullYear());
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const { user } = useAuth();
   const [openCargaManual, setOpenCargaManual] = useState(false); // 🔹
+  const [openVistaDocumento, setVistaDocumento] = useState(false); // 🔹
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) setSelectedFile(file);
@@ -41,6 +43,14 @@ const [anio, setAnio] = useState(new Date().getFullYear());
     }
     setOpenCargaManual(true);
     console.log(documento);
+
+  };
+
+  
+   const handleOpenVerdocumento = () => {
+
+    setVistaDocumento(true);
+
 
   };
 
@@ -138,6 +148,12 @@ const [anio, setAnio] = useState(new Date().getFullYear());
             Carga Manual
           </Button>
         </Grid>
+
+           <Grid item xs={12} sm={4} md={3}>
+          <Button variant="contained" color="secondary" fullWidth onClick={handleOpenVerdocumento}>
+            Ver documentos
+          </Button>
+        </Grid>
       </Grid>
 
       {/* Modal de subida de archivo */}
@@ -148,12 +164,13 @@ const [anio, setAnio] = useState(new Date().getFullYear());
 
           <Grid container spacing={2} mb={2}>
             <Grid item xs={12} sm={6} md={4}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth sx={{ minWidth: 200, height: 56 }}>
                 <InputLabel id="tipo-pago-label">Tipo de Pago</InputLabel>
                 <Select
                   labelId="tipo-pago-label"
                   value={tipoPago}
                   onChange={handleTipoPagoChange}
+                  
                   label="Tipo de Pago"
                 >
                   <MenuItem value="CON RXH">CON RXH</MenuItem>
@@ -162,7 +179,7 @@ const [anio, setAnio] = useState(new Date().getFullYear());
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-  <FormControl fullWidth size="small">
+  <FormControl fullWidth sx={{ minWidth: 200, height: 56 }}>
     <InputLabel id="periodo-label">Período</InputLabel>
     <Select
       labelId="periodo-label"
@@ -214,6 +231,13 @@ const [anio, setAnio] = useState(new Date().getFullYear());
         onClose={() => setOpenCargaManual(false)}
         idMedico={user.emp_codigo}
         tipoPago={documento}  // 🔹 enviamos tipoPago
+      />
+
+        <Vista_documento
+        open={openVistaDocumento}
+        onClose={() => setVistaDocumento(false)}
+        idMedico={user.emp_codigo}
+
       />
 
       {/* Consultar pagos */}
